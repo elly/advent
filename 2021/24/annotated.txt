@@ -1,0 +1,371 @@
+inp w               ; w = in0(), CANTMATCH
+mul x 0
+add x z
+mod x 26
+div z 1
+add x 13
+eql x w
+eql x 0             ; x = (z % 26 + 13) != w
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y             ; z *= 25 * x + 1
+mul y 0             
+add y w
+add y 0
+mul y x
+add z y             ; z += (w * x)
+
+;;; z = 0 to start so z *= 25 * x + 1 leaves it 0
+;;; z = in0
+
+inp w               ; w = in1(), CANTMATCH
+mul x 0
+add x z
+mod x 26
+div z 1
+add x 11
+eql x w
+eql x 0             ; x = (z % 26 + 11) != w
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y             ; z *= 25 * x + 1
+mul y 0
+add y w
+add y 3
+mul y x
+add z y             ; z += (w + 3) * x
+
+;;; we can't arrange for (z % 26) + 11 to equal w, so
+;;;   z = 26 * in0 + (in1 + 3)
+;;; so we'd need in1 + 3 = 14 after the mod 26 term, which we can't arrange, so
+
+inp w               ; w = in2(), CANTMATCH
+mul x 0
+add x z
+mod x 26
+div z 1
+add x 14
+eql x w
+eql x 0             ; x = (z % 26) + 14 != w
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y             ; z *= 25 * x + 1
+mul y 0
+add y w
+add y 8
+mul y x
+add z y             ; z += (w + 8) * x
+
+;;; z = (26**2 * in0) + (26 * (in1 + 3)) + (in2 + 8)
+;;; we have a mod 26 again, and we can't arrange in2 + 8 - 5 = w, so
+
+inp w               ; w = in3(), COULDMATCH
+mul x 0
+add x z
+mod x 26            ; x = (z % 26) - 5 != w
+div z 26            ; z = z / 26
+add x -5
+eql x w
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y             ; z *= 25 * x + 1
+mul y 0
+add y w
+add y 5
+mul y x
+add z y             ; z += (w + 5) * x
+
+;;; z = (26**2 * in0) + (26 * (in1 + 3)) + (in2 + 8) + (in3 + 5)
+
+inp w               ; w = in4(), CANTMATCH
+mul x 0
+add x z
+mod x 26
+div z 1
+add x 14
+eql x w
+eql x 0             ; x = (z % 26) + 14 != w
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y             ; z *= (25 * x) + 1
+mul y 0
+add y w
+add y 13
+mul y x
+add z y             ; z += (w + 13) * x
+
+;;; ... so now we have (in2 + in3 + 13) % 26 + 14 = w, which is *still*
+;;; impossible, so:
+
+;;; z = (26**3 * in0) + (26**2 * (in1 + 3)) + (26 * (in2 + 8))
+;;;   + (26 * (in3 + 5)) + (in4 + 13)
+
+inp w               ; w = in5(), CANTMATCH
+mul x 0
+add x z
+mod x 26
+div z 1
+add x 10
+eql x w
+eql x 0             ; x = (z % 26) + 10 != w
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y             ; z *= (25 * x) + 1
+mul y 0
+add y w
+add y 9
+mul y x
+add z y             ; z += (w + 9) * x
+
+;;; another factor we can't control...
+;;; our polynomial coefficients are:
+;;; { in0, in1 + 3, in2 + in3 + 13, in4 + 13, in5 + 9 }
+
+inp w               ; w = in6(), CANTMATCH
+mul x 0
+add x z
+mod x 26
+div z 1
+add x 12
+eql x w
+eql x 0             ; x = (z % 26) + 12 != w
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y             ; z *= (25 * x) + 1
+mul y 0
+add y w
+add y 6
+mul y x
+add z y             ; z += (w + 6) * x
+
+;;; and again
+;;; { in0, in1 + 3, in2 + in3 + 13, in4 + 13, in5 + 6 }
+
+inp w               ; w = in7(), COULDMATCH
+mul x 0
+add x z
+mod x 26            ; x = (z % 26) - 14 != w
+div z 26            ; z = z / 26
+add x -14
+eql x w
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y             ; z *= (25 * x) + 1
+mul y 0
+add y w
+add y 1
+mul y x
+add z y             ; z += (w + 1) * x
+
+;;; { in0, in1 + 3, in2 + in3 + 13, in4 + 13, in5 + in6 + 7 }
+
+inp w               ; w = in8(), COULDMATCH
+mul x 0
+add x z
+mod x 26            ; x = (z % 26) - 8 != w
+div z 26            ; z = z / 26
+add x -8
+eql x w
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y             ; z *= (25 * x) + 1
+mul y 0
+add y w
+add y 1
+mul y x
+add z y             ; z += (w + 1) * x
+
+;;; { in0, in1 + 13, in2 + in3 + 13, in4 + 13, in5 + in6 + in7 + 8 }
+
+inp w               ; w = in9(), CANTMATCH
+mul x 0
+add x z
+mod x 26
+div z 1
+add x 13
+eql x w
+eql x 0             ; x = (z % 26) + 13 != w
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y             ; z *= (x * 25) + 1
+mul y 0
+add y w
+add y 2
+mul y x
+add z y             ; z += (w + 2) * x
+
+;;; { in0, in1 + 13, in2 + in3 + 13, in4 + 13, in5 + in6 + in7 + in8,
+;;;   in9 + 2 }
+
+;;; 
+;;; 
+
+inp w               ; w = in10(), COULDMATCH
+mul x 0
+add x z
+mod x 26            ; x = (z % 26) != w
+div z 26            ; z = z / 26
+add x 0
+eql x w
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y             ; z *= (25 * x) + 1
+mul y 0
+add y w
+add y 7
+mul y x
+add z y             ; z += (w + 7) * x
+
+;;; { in0, in1 + 13, in2 + in3 + 13, in4 + 13, in5 + in6 + in7 + in8,
+;;;   in9 + in10 + 9 }
+
+inp w               ; w = in11(), COULDMATCH
+mul x 0
+add x z
+mod x 26            ; x = (z % 26) - 5 != w
+div z 26            ; z = z / 26
+add x -5
+eql x w
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y             ; z *= (25 * x) + 1
+mul y 0
+add y w
+add y 5
+mul y x
+add z y             ; z += (w + 5) * x
+
+;;; { in0, in1 + 13, in2 + in3 + 13, in4 + 13, in5 + in6 + in7 + in8,
+;;;   in9 + in10 + in11 + 14 }
+
+inp w               ; w = in12(), COULDMATCH
+mul x 0
+add x z
+mod x 26            ; x = (z % 26) - 9 != w
+div z 26            ; z = z / 26
+add x -9
+eql x w
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y             ; z *= (25 * x) + 1
+mul y 0
+add y w
+add y 8
+mul y x
+add z y             ; z += (w + 8) * x
+
+;;; { in0, in1 + 13, in2 + in3 + 13, in4 + 13, in5 + in6 + in7 + in8,
+;;;   in9 + in10 + in11 + in12 + 12 }
+
+;;; 
+
+inp w               ; w = in13(), COULDMATCH
+mul x 0
+add x z
+mod x 26            ; x = (z % 26) - 1 != w
+div z 26            ; z = z / 26
+add x -1
+eql x w
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y             ; z *= (25 * x) + 1
+mul y 0
+add y w
+add y 15
+mul y x
+add z y             ; z += (w + 15) * x
+
+;;; { in0, in1 + 13, in2 + in3 + 13, in4 + 13, in5 + in6 + in7 + in8,
+;;;   in9 + in10 + in11 + in12 + in13 + 27 }
+
+; the last four inputs are ones we could match - eg, for
+;   x = (z % 26) - 1 != w,
+; w + 1 = (z % 26) which is totally doable fsvo z % 26. If we do match,
+; we divide out a factor of 26 from z and don't add anything to it, which
+; might be helpful?
+; In fact, some of the other steps could match - I'll mark them.
+; There are 7 CANTMATCH and 7 COULDMATCH, which is pretty convenient!
+;
+; Let's consider the first 4: 
+;   z = (26**2 * in0) + (26 * (in1 + 3)) + (in2 + 8)
+; and we need (z % 26) - 5 = w there, meaning
+;
+;;; in3 = in2 + 3
+;
+; which would leave us with:
+;   z = (26 * in0) + (in1 + 3)
+; we pick up two more terms, so:
+;   z = (26**4 * in0) + (26**3 * (in1 + 3)) + (26**2 * (in4 + 13))
+;     + (26 * (in5 + 9)) + (in6 + 6)
+; then we need (z % 26) - 14 = w, so (in6 + 6) % 26 - 14 = in7
+;;; in6 = 9
+;;; in7 = 1
+;;; (8 & 0 would fit the math but 0 is illegal)
+;
+; now we have: (26**3 * in0) + (26**2 * (in1 + 2)) + (26 * in4 + 13)
+;            + (in5 + 9)
+; so in5 + 9 - 8 = in8, or
+;;; in8 = in5 + 1
+;
+; but we get another factor after that, so:
+;   (26**3 * in0) + (26**2 * (in1 + 2)) + (26 * (in4 + 13)) + (in9 + 2)
+;
+;;; in10 = in9 + 2
+; and then in4 + 13 - 5 = in11, so
+;;; in11 = in4 + 8
+; and then in1 + 3 - 9 = in12, so
+;;; in12 = in1 - 6
+; and then in0 - 1 = in13, so
+;;; in13 = in0 - 1
+
+;;; summary:
+;   x0, x1, x2, x2 + 3, x4, x5, 9, 1, x5 + 1, x6, x6 + 2, x4 + 8, x1 - 6, x0 - 1
+;
+; so a valid input ought to be:
+;    9   9   6       9   1   8  9  1       9   7       9       9       3       8
+;
+; 99691891979928
+; but that's too low, odd
+;
+; ah! a transcription error!
+; it was 99691891979938
+;
+; now, part b is the lowest...
+; x0, x1, x2, x2 + 3, x4, x5, 9, 1, x5 + 1, x6, x6 + 2, x4 + 8, x1 - 6, x0 - 1
+;  2   7   1       4   1   1  9  1       2   1       3       9       1       1
+; 27141191213911
