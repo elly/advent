@@ -1,6 +1,6 @@
 #lang racket
 
-(require "../advent.scm")
+(require "../../advent.scm")
 
 ; Day 18: Snailfish Numbers!
 

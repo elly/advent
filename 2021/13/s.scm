@@ -1,6 +1,6 @@
 #lang racket
 
-(require "../advent.scm")
+(require "../../advent.scm")
 
 ; Day 13: Transparent Origami
 ; We are given a set of points and then a list of lines to fold along,

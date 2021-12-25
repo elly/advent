@@ -1,6 +1,6 @@
 #lang racket
 
-(require "../advent.scm")
+(require "../../advent.scm")
 
 ; Day 21: Dirac Dice
 ; Players play on a circular track with spaces marked 1 through 10; each one has

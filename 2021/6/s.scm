@@ -1,6 +1,6 @@
 #lang racket
 
-(require "../advent.scm")
+(require "../../advent.scm")
 
 ; Day 6: Lanternfish
 ; Each lanternfish creates a new lanternfish every 7 days.
