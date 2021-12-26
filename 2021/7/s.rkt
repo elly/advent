@@ -1,6 +1,6 @@
 #lang racket
 
-(require "../../advent.scm")
+(require "../../advent.rkt")
 
 (define/contract parse
   (-> (listof string?) (listof integer?))

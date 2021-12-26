@@ -1,6 +1,6 @@
 #lang racket
 
-(require "../../advent.scm")
+(require "../../advent.rkt")
 
 ; Day 17: Trick Shot
 ; We are launching a probe with an initial x,y velocity pair and trying to

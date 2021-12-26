@@ -13,7 +13,7 @@
 ; for which every bit is the least common bit. If there are ties, for
 ; most common take the ones with 1, and for least common take the ones with 0.
 
-(require "../../advent.scm")
+(require "../../advent.rkt")
 
 (define parse
   (curry map

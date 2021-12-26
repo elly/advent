@@ -1,6 +1,6 @@
 #lang racket
 
-(require "../../advent.scm")
+(require "../../advent.rkt")
 
 (define order? (list/c symbol? integer?))
 

@@ -6,7 +6,7 @@
 ; a 3-measurement window increases (for part b) - so basically, part b is the
 ; solution to part a applied to the 3-window rolling sum of the input.
 
-(require "../../advent.scm")
+(require "../../advent.rkt")
 
 (define parse (curry map s->i))
 

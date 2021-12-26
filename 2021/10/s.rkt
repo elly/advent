@@ -1,6 +1,6 @@
 #lang racket
 
-(require "../../advent.scm")
+(require "../../advent.rkt")
 
 ; Day 10: Syntax Scoring
 

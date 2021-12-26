@@ -2,7 +2,7 @@
 
 ; Day 4: Giant Squid Bingo!
 
-(require "../../advent.scm")
+(require "../../advent.rkt")
 
 ; Here, boards are represented as 1d vectors of integers:
 (define (board? b)

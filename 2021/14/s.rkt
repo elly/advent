@@ -1,6 +1,6 @@
 #lang racket
 
-(require "../../advent.scm")
+(require "../../advent.rkt")
 
 ; Day 14: Extended Polymerization
 ; We are given a polymer (a sequence of letters) and a list of rules, which

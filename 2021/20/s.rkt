@@ -1,6 +1,6 @@
 #lang racket
 
-(require "../../advent.scm")
+(require "../../advent.rkt")
 (require srfi/60)
 
 ; Day 20: Trench Map

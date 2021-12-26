@@ -1,6 +1,6 @@
 #lang racket
 
-(require "../../advent.scm")
+(require "../../advent.rkt")
 
 ; Day 12: Passage Pathing
 ; We are given a list of adjacent node pairs that form a graph. Some of the

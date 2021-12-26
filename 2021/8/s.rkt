@@ -1,6 +1,6 @@
 #lang racket
 
-(require "../../advent.scm")
+(require "../../advent.rkt")
 
 ; Day 8: 7 Segment Search
 ; We have 7-segment displays with this mapping:

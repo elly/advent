@@ -5,7 +5,7 @@
 ; there are where at least two lines overlap. For part A, we need to filter the
 ; input so we only consider cardinal lines.
 
-(require "../../advent.scm")
+(require "../../advent.rkt")
 
 (define (line? v)
   (list/c integer? integer? integer? integer?))

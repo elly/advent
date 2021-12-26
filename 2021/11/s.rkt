@@ -1,6 +1,6 @@
 #lang racket
 
-(require "../../advent.scm")
+(require "../../advent.rkt")
 
 ; Day 11: Dumbo Octopus
 ; We have an nxn grid of octopuses, each with an integer energy level.
