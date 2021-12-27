@@ -1,7 +1,7 @@
 #lang racket
 
 (provide vec2? vec2-inbounds? vec2-at vec2-neighbors vec2-cardinal-neighbors
-         vec2-points vec2-mapi vec2-map vec2-values
+         vec2-points vec2-mapi vec2-map vec2-values vec2-bottom-right
          line-list->vec2)
 (require "geom.rkt")
 
@@ -50,3 +50,8 @@
     (lambda (y)
       (build-vector (string-length (list-ref ls y))
                     (lambda (x) (f (string-ref (list-ref ls y) x)))))))
+
+(define (vec2-bottom-right v)
+  (point (sub1 (vector-length (vector-ref v 0)))
+         (sub1 (vector-length v))
+         0))

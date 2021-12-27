@@ -1,6 +1,8 @@
 #lang racket
 
-(require "../../advent.rkt")
+(provide today)
+(require "../../lib/geom.rkt"
+         "../../lib/vec.rkt")
 
 ; Day 15: Chiton
 
@@ -10,29 +12,30 @@
            (curry map
               (compose list->vector
                        (curry filter integer?)
-                       (curry map s->i)
+                       (curry map string->number)
                        (curryr string-split "")))))
 
 (define/contract (shortest-path g s e)
-  (-> vec2? point2? point2? integer?)
+  (-> vec2? point? point? integer?)
 
   (define/contract (make-vec2-hash g v)
     (-> vec2? any/c hash?)
-    (make-hash (map (lambda (i) (cons i v)) (vec2-indexes g))))
+    (make-hash (map (lambda (i) (cons i v)) (vec2-points g))))
 
   (define/contract (dijkstra g s e)
-    (-> vec2? point2? point2? (cons/c hash? hash?))
+    (-> vec2? point? point? (cons/c hash? hash?))
     (define dm (make-vec2-hash g 999999999))
     (define pm (make-vec2-hash g #f))
     (hash-set! dm s 0)
     ; Note to self: this is likely "the slow part" since q is the size of the
     ; input!
-    (let loop ((q (list->set (vec2-indexes g))))
+    (let loop ((q (list->set (vec2-points g))))
       (if (set-empty? q)
         (cons dm pm)
         (let* ((u (argmin (curry hash-ref dm) (set->list q)))
                (du (hash-ref dm u))
-               (vs (filter (curry set-member? q) (vec2-neighbors g u))))
+               (vs (filter (curry set-member? q)
+                           (vec2-cardinal-neighbors g u))))
           (if (equal? e u)
             (cons dm pm)
             (let iloop ((vs vs))
@@ -69,7 +72,7 @@
 
   (define/contract (v-for x y)
     (-> integer? integer? integer?)
-    (let ((b (vec2-at g (list (modulo x gc) (modulo y gr))))
+    (let ((b (vec2-at g (point (modulo x gc) (modulo y gr) 0)))
           (tx (floor (/ x gc))) (ty (floor (/ y gr))))
       (let ((v (+ b tx ty)))
         (+ 1 (modulo (- v 1) 9)))))
@@ -80,11 +83,9 @@
         (curryr v-for y)))))
 
 (define (spbot g)
-  (shortest-path g '(0 0) (vec2-bottom-right g)))
+  (shortest-path g (point 0 0 0) (vec2-bottom-right g)))
 
-(define solve
-  (fork
-    spbot
-    (compose spbot grow)))
+(define solve-a spbot)
+(define solve-b (compose spbot grow))
 
-(solve! 15 parse solve)
+(define today (list parse identity solve-a solve-b (const #t)))
