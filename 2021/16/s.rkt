@@ -1,7 +1,8 @@
 #lang racket
 
-(require "../../advent.rkt")
+(provide today)
 (require srfi/60)
+(require "../../lib/list.rkt")
 
 ; Day 16: Packet Decoder
 
@@ -141,9 +142,4 @@
       [(6) (if (< (first vs) (second vs)) 1 0)]
       [(7) (if (= (first vs) (second vs)) 1 0)])))
 
-(define solve
-  (fork
-    sum-versions
-    eval-p))
-
-(solve! 16 parse solve)
+(define today (list parse identity sum-versions eval-p (const #t)))
