@@ -8,10 +8,13 @@
 (provide point-neighbors points-coplanar-in?)
 (provide *origin-point*)
 
+(provide rect rect? rect-contains? rect-min rect-max)
+
 (define plane? (or/c 'x 'y 'z))
 
 (struct point (x y z) #:transparent)
 (struct line (start end) #:transparent)
+(struct rect (min max) #:transparent)
 
 (define *origin-point* (point 0 0 0))
 
@@ -71,3 +74,11 @@
     [(y) (= (point-y a) (point-y b))]
     [(z) (= (point-z a) (point-z b))]
     [else (error "plane ~a" plane)]))
+
+(define (rect-contains? r p)
+  (and (>= (point-x p) (point-x (rect-min r)))
+       (<= (point-x p) (point-x (rect-max r)))
+       (>= (point-y p) (point-y (rect-min r)))
+       (<= (point-y p) (point-y (rect-max r)))
+       (>= (point-z p) (point-z (rect-min r)))
+       (<= (point-z p) (point-z (rect-max r)))))
