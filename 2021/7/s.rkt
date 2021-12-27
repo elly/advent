@@ -1,10 +1,12 @@
 #lang racket
 
-(require "../../advent.rkt")
+(provide today)
+(require "../../lib/list.rkt"
+         "../../lib/num.rkt")
 
 (define/contract parse
   (-> (listof string?) (listof integer?))
-  (compose (curry map s->i)
+  (compose (curry map string->number)
            (curryr string-split ",")
            car))
 
@@ -12,12 +14,6 @@
   (-> procedure? (listof integer?) integer? integer?)
   (sum
     (map (curryr f s) cs)))
-
-(define/contract (imedian is)
-  (-> (listof integer?) integer?)
-  (if (even? (length is))
-      (list-ref is (/ (length is) 2))
-      (list-ref is (/ (+ (length is) 1) 2))))
 
 (define/contract (searchmin f cs p d)
   (-> procedure? (listof integer?) integer? integer? integer?)
@@ -30,7 +26,7 @@
 
 (define/contract (findmin f cs)
   (-> procedure? (listof integer?) integer?)
-  (let* ((m (imedian cs))
+  (let* ((m (first cs))
          (cm (cost-for f cs m))
          (cl (cost-for f cs (- m 1)))
          (cr (cost-for f cs (+ m 1))))
@@ -40,15 +36,7 @@
       [(< cr cm) (searchmin f cs m 1)]
       [else (error "?")])))
 
-(define/contract (summat n)
-  (-> integer? integer?)
-  (/ (* n (+ n 1)) 2))
+(define solve-a (curry findmin (lambda (p c) (abs (- p c)))))
+(define solve-b (curry findmin (lambda (p c) (summat (abs (- p c))))))
 
-(define solve
-  (fork
-    (curry findmin
-      (lambda (p c) (abs (- p c))))
-    (curry findmin
-      (lambda (p c) (summat (abs (- p c)))))))
-
-(solve! 7 parse solve)
+(define today (list parse identity solve-a solve-b (const #t)))
