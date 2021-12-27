@@ -1,7 +1,8 @@
 #lang racket
 
 (provide today)
-(require "../../lib/geom.rkt"
+(require "../../lib/func.rkt"
+         "../../lib/geom.rkt"
          "../../lib/vec.rkt")
 
 ; Day 11: Dumbo Octopus
@@ -64,21 +65,25 @@
   (let-values (((v n) (flash-all (raise-energy v))))
     (values v n)))
 
-(define/contract (stepn v n)
-  (-> vec2? integer? integer?)
-  (let loop ((v v) (n n) (t 0))
-    (if (= 0 n)
-        t
-        (let-values (((nv d) (step v)))
-          (loop nv (sub1 n) (+ t d))))))
+(define (solve-a v)
+  (cdr
+    (iterate-n
+      (lambda (s)
+        (let-values ([(nv d) (step (car s))])
+          (cons nv (+ d (cdr s)))))
+      100
+      (cons v 0))))
 
-(define/contract (step-until-all v)
-  (-> vec2? integer?)
-  (let loop ((v v) (n 1))
-    (let-values (((nv t) (step v)))
-      (if (= t (* (vector-length nv) (vector-length (vector-ref nv 0))))
-          n
-          (loop nv (add1 n))))))
+(define (solve-b v)
+  (third
+    (iterate-until
+      (lambda (s)
+        (let-values ([(nv d) (step (car s))])
+          (list nv d (add1 (third s)))))
+      (lambda (s n)
+        (= (second s)
+           (* (vector-length v)
+              (vector-length (vector-ref v 0)))))
+      (list v 0 0))))
 
-(define today (list parse identity (curryr stepn 100) (curry step-until-all)
-                    (const #t)))
+(define today (list parse identity solve-a solve-b (const #t)))
