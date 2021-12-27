@@ -17,11 +17,12 @@
 
 (define (string->point s)
   (let ((ps (string-split s ",")))
-    (point (string->number (first ps))
-           (string->number (second ps))
-           (if (>= (length ps) 3)
-               (string->number (third ps))
-               0))))
+    (and (= (length ps) 2)
+         (point (string->number (first ps))
+                (string->number (second ps))
+                (if (>= (length ps) 3)
+                    (string->number (third ps))
+                    0)))))
 
 (define (unitize d)
   (if (= d 0) 0 (/ d (abs d))))
