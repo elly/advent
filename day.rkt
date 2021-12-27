@@ -3,6 +3,8 @@
 (provide day day?
          day-year day-number
          day-parse day-extract day-solve-a day-solve-b
-         day-unit-test)
+         day-test
 
-(struct day (year number parse extract solve-a solve-b unit-test) #:transparent)
+         day-path)
+
+(struct day (year number parse extract solve-a solve-b test path) #:transparent)

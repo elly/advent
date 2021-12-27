@@ -1,5 +1,11 @@
 #lang racket
 
-(require "../../advent.rkt")
+(provide today)
 
-(solve! 0 first (lambda (a) (cons a a)))
+(define parse (curry map string->number))
+(define extract (curryr sort <))
+(define solve-a first)
+(define solve-b last)
+(define test (const #f))
+
+(define today (list parse extract solve-a solve-b test))
