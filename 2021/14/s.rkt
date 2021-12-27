@@ -1,6 +1,7 @@
 #lang racket
 
-(require "../../advent.rkt")
+(provide today)
+(require "../../lib/func.rkt")
 
 ; Day 14: Extended Polymerization
 ; We are given a polymer (a sequence of letters) and a list of rules, which
@@ -126,13 +127,9 @@
   (-> (listof integer?) integer?)
   (- (apply max ac) (apply min ac)))
 
-(define/contract (solve-part n in)
+(define/contract (solve n in)
   (-> integer? (cons/c polymer? (listof rule?)) integer?)
   (poly-score (atom-counts (step in n))))
 
-(define solve
-  (fork
-    (curry solve-part 10)
-    (curry solve-part 40)))
-
-(solve! 14 parse solve)
+(define today (list parse identity (curry solve 10) (curry solve 40)
+                    (const #t)))
