@@ -1,6 +1,7 @@
 #lang racket
 
-(require "../../advent.rkt")
+(provide today)
+(require "../../lib/set.rkt")
 
 ; Day 12: Passage Pathing
 ; We are given a list of adjacent node pairs that form a graph. Some of the
@@ -24,8 +25,8 @@
             (cons (first p) (second p))))))
 
 (define small? (compose char-lower-case?
-                      (curryr string-ref 0)
-                      symbol->string))
+                        (curryr string-ref 0)
+                        symbol->string))
 
 (define terminal? (or/c (curry symbol=? 'start) (curry symbol=? 'end)))
 
@@ -54,8 +55,7 @@
 (define/contract (findpaths g s e vs)
   (-> graph? node? node? boolean? (set/c path?))
 
-  (define/contract (fpn g e s vs n)
-    (-> graph? node? node? boolean? node? (set/c path?))
+  (define (fpn g e s vs n)
     (list->set
       (set-map (findpaths g n e vs)
                (curry cons s))))
@@ -74,9 +74,16 @@
               (set-union (apply set-union mp0)
                          (apply set-union mp1)))))))
 
-(define solve
-  (fork
-    (compose set-count (curryr findpaths 'start 'end #t))
-    (compose set-count (curryr findpaths 'start 'end #f))))
+(define extract (curryr findpaths 'start 'end #f))
 
-(solve! 12 parse solve)
+(define (no-repeats? p)
+  (not (check-duplicates p
+                         (lambda (a b)
+                                 (and (small? a) (small? b) (equal? a b)))
+                         #:default #f)))
+
+(define solve-a
+  (compose set-count (curry set-filter no-repeats?)))
+(define solve-b set-count)
+
+(define today (list parse extract solve-a solve-b (const #t)))
