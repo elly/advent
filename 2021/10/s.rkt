@@ -1,8 +1,9 @@
 #lang racket
 
-(require "../../advent.rkt")
-
 ; Day 10: Syntax Scoring
+
+(provide today)
+(require "../../lib/list.rkt")
 
 (define parse identity)
 
@@ -59,17 +60,18 @@
 (define (middle l)
   (list-ref l (/ (sub1 (length l)) 2)))
 
-(define solve
-  (fork
-    (compose sum
-             (curry map delim-score-a)
-             (curry filter char?)
-             (curry map first-unmatched))
-    (compose middle
-             (curryr sort <)
-             (curry map score-completion-string)
-             (curry map (curry map delim-for))
-             (curry filter list?)
-             (curry map first-unmatched))))
+(define extract (curry map first-unmatched))
 
-(solve! 10 parse solve)
+(define solve-a
+  (compose sum
+           (curry map delim-score-a)
+           (curry filter char?)))
+
+(define solve-b
+  (compose middle
+           (curryr sort <)
+           (curry map score-completion-string)
+           (curry map (curry map delim-for))
+           (curry filter list?)))
+
+(define today (list parse extract solve-a solve-b (const #t)))
