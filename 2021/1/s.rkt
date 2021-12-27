@@ -7,6 +7,7 @@
 ; solution to part a applied to the 3-window rolling sum of the input.
 
 (provide today)
+(require "../../lib/list.rkt")
 
 (define parse (curry map string->number))
 
@@ -31,8 +32,6 @@
     (if (< (length lst) w)
       (reverse ws)
       (loop (cons (take lst w) ws) (cdr lst)))))
-
-(define sum (curry foldl + 0))
 
 (define extract identity)
 (define solve-a (compose (curry count identity) increasing))

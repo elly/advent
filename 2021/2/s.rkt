@@ -34,8 +34,6 @@
       [(forward) (list (+ h arg) (+ v (* a arg)) a)]
       [else (error i)])))
 
-(define prod (curry foldl * 1))
-
 (define solve-a
   (compose prod (curry foldl walk-a '(0 0))))
 (define solve-b

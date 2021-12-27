@@ -2,7 +2,9 @@
 
 ; Day 4: Giant Squid Bingo!
 
-(require "../../advent.rkt")
+;(require "../../advent.rkt")
+(require "../../lib/list.rkt")
+(provide today)
 
 ; Here, boards are represented as 1d vectors of integers:
 (define (board? b)
@@ -15,7 +17,7 @@
 
   (define/contract (parse-board-line l)
     (-> string? (listof integer?))
-    (map s->i (string-split (string-normalize-spaces l))))
+    (map string->number (string-split (string-normalize-spaces l))))
 
   (let ((is (map parse-board-line ls)))
     (list->vector (append* is))))
@@ -24,8 +26,8 @@
   (-> (listof string?)
       (cons/c (listof integer?) (listof board?)))
   (cons
-    (map s->i (string-split (first lines) ","))
-    (map parse-board (group (curry string=? "") (drop lines 2)))))
+    (map string->number (string-split (first lines) ","))
+    (map parse-board (stanza (curry string=? "") (drop lines 2)))))
 
 (define/contract (board-wins? b v)
   (-> board? (listof integer?) boolean?)
@@ -92,9 +94,4 @@
            (nwb (cdr nwbs)))
       (* (sum (unmarked nwb nwv)) (last nwv)))))
 
-(define solve
-  (fork
-    part-a
-    part-b))
-
-(solve! 4 parse solve)
+(define today (list parse identity part-a part-b (const #t)))
