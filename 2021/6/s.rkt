@@ -1,7 +1,5 @@
 #lang racket
 
-;(require "../../advent.rkt")
-
 ; Day 6: Lanternfish
 ; Each lanternfish creates a new lanternfish every 7 days.
 ; We can model each fish as a single number: days until it creates a new
