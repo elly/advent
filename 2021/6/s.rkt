@@ -1,6 +1,6 @@
 #lang racket
 
-(require "../../advent.rkt")
+;(require "../../advent.rkt")
 
 ; Day 6: Lanternfish
 ; Each lanternfish creates a new lanternfish every 7 days.
@@ -11,6 +11,10 @@
 
 ; Each day, a 0 becomes a 6 and adds a new 8 to the end, while each other
 ; number decreases by one.
+
+(provide today)
+(require "../../lib/func.rkt"
+         "../../lib/list.rkt")
 
 (define *max-fish* 9)
 
@@ -23,12 +27,11 @@
 (define/contract parse
   (-> (listof string?) (vectorof integer?))
   (compose build-fvec
-           (curry map s->i)
+           (curry map string->number)
            (curryr string-split ",")
            car))
 
-(define/contract (step-fvec fv)
-  (-> (vectorof integer?) (vectorof integer?))
+(define (step-fvec fv)
   (define nf (curry vector-ref fv))
   (build-vector *max-fish*
     (lambda (i)
@@ -38,9 +41,8 @@
         [(= i 8) (nf 0)]
         [else (nf (add1 i))]))))
 
-(define solve
-  (fork
-    (compose sum vector->list (curry iterate-n step-fvec 80))
-    (compose sum vector->list (curry iterate-n step-fvec 256))))
+(define (solve n in)
+  (sum (vector->list (iterate-n step-fvec n in))))
 
-(solve! 6 parse solve)
+(define today
+  (list parse identity (curry solve 80) (curry solve 256) (const #t)))
