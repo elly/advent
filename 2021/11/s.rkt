@@ -1,6 +1,8 @@
 #lang racket
 
-(require "../../advent.rkt")
+(provide today)
+(require "../../lib/geom.rkt"
+         "../../lib/vec.rkt")
 
 ; Day 11: Dumbo Octopus
 ; We have an nxn grid of octopuses, each with an integer energy level.
@@ -12,11 +14,7 @@
 
 (define/contract parse
   (-> (listof string?) vec2?)
-  (compose list->vector
-           (curry map
-              (compose list->vector
-                       (curry map (compose string->number string))
-                       string->list))))
+  (curry line-list->vec2 (compose string->number string)))
 
 (define/contract raise-energy
   (-> vec2? vec2?)
@@ -25,19 +23,19 @@
 ; Given a vec2 of octopus energy levels and a set of which octopi have already
 ; flashed, return a set of octopi that are about to flash.
 (define/contract (about-to-flash v f)
-  (-> vec2? (set/c point2?) (set/c point2?))
+  (-> vec2? (set/c point?) (set/c point?))
   (list->set
     (filter
       (lambda (p)
         (and (> (vec2-at v p) 9)
              (not (set-member? f p))))
-      (vec2-indexes v))))
+      (vec2-points v))))
 
 (define/contract (flash v s)
-  (-> vec2? (set/c point2?) vec2?)
+  (-> vec2? (set/c point?) vec2?)
   (foldl
     (lambda (p v)
-       (let ((ns (list->set (vec2-neighbors-d v p))))
+       (let ((ns (list->set (vec2-neighbors v p))))
          (vec2-mapi
            (lambda (np) (if (set-member? ns np)
                             (add1 (vec2-at v np))
@@ -46,7 +44,7 @@
     v (set->list s)))
 
 (define/contract (zero-flashed v fs)
-  (-> vec2? (set/c point2?) vec2?)
+  (-> vec2? (set/c point?) vec2?)
   (vec2-mapi
     (lambda (p) (if (set-member? fs p)
                     0
@@ -82,9 +80,5 @@
           n
           (loop nv (add1 n))))))
 
-(define solve
-  (fork
-    (curryr stepn 100)
-    (curry step-until-all)))
-
-(solve! 11 parse solve)
+(define today (list parse identity (curryr stepn 100) (curry step-until-all)
+                    (const #t)))

@@ -1,7 +1,7 @@
 #lang racket
 
 (provide vec2? vec2-inbounds? vec2-at vec2-neighbors vec2-cardinal-neighbors
-         vec2-points vec2-mapi vec2-values
+         vec2-points vec2-mapi vec2-map vec2-values
          line-list->vec2)
 (require "geom.rkt")
 
@@ -38,6 +38,9 @@
     (lambda (y)
       (build-vector (vector-length (vector-ref v y))
                     (lambda (x) (f (point x y 0)))))))
+
+(define (vec2-map f v)
+  (vec2-mapi (compose f (curry vec2-at v)) v))
 
 (define (vec2-values v)
   (apply append (map vector->list (vector->list v))))
