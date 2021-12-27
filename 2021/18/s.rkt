@@ -1,8 +1,8 @@
 #lang racket
 
-(require "../../advent.rkt")
-
 ; Day 18: Snailfish Numbers!
+
+(provide today)
 
 (define snail?
   (flat-rec-contract snail?
@@ -148,13 +148,12 @@
       t))
 
 (define/contract (biggest-magnitude ts)
-  (-> (listof snail?) integer?)
-  (let ((ap (append (combinations ts 2) (combinations (reverse ts) 2))))
-    (magnitude (sn-sum (argmax (compose magnitude sn-sum) ap)))))
+  (-> (listof snail?) (or/c integer? #f))
+  (if (= (length ts) 1)
+      #f
+      (let ((ap (append (combinations ts 2) (combinations (reverse ts) 2))))
+        (magnitude (sn-sum (argmax (compose magnitude sn-sum) ap))))))
 
-(define solve
-  (fork
-    (compose magnitude sn-sum)
-    biggest-magnitude))
+(define solve-a (compose magnitude sn-sum))
 
-(solve! 18 parse solve)
+(define today (list parse identity solve-a biggest-magnitude (const #t)))
