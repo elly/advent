@@ -1,6 +1,7 @@
 #lang racket
 
-(require "../../advent.rkt")
+(provide today)
+(require "../../lib/list.rkt")
 
 ; Day 8: 7 Segment Search
 ; We have 7-segment displays with this mapping:
@@ -136,13 +137,13 @@
                  (second d))))
     (string->number (string-join (map number->string r) ""))))
 
-(define solve
-  (fork
-    (compose sum
-             (curry map (curry count (compose unique-length? length)))
-             (curry map second))
-    (compose
-       sum
-       (curry map unscramble))))
+(define solve-a
+  (compose sum
+          (curry map (curry count (compose unique-length? length)))
+          (curry map second)))
 
-(solve! 8 parse solve)
+(define solve-b
+  (compose sum (curry map unscramble)))
+
+
+(define today (list parse identity solve-a solve-b (const #t)))
