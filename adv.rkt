@@ -89,10 +89,12 @@
 
 (define (check d)
   (let ((ps (paths-for-check d)))
-    (andmap (curry run-on-path-pair d) ps)))
+    (when (not (andmap (curry run-on-path-pair d) ps))
+          (error "check mismatch"))))
 
-(define (solve day)
-  (printf "~a~n" (path-for-solve day)))
+(define (solve d)
+  (when (not (run-on-path-pair d (path-for-solve d)))
+        (error "solve mismatch")))
 
 (define (test day)
   ((day-test day)))

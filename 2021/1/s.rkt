@@ -6,9 +6,9 @@
 ; a 3-measurement window increases (for part b) - so basically, part b is the
 ; solution to part a applied to the 3-window rolling sum of the input.
 
-(require "../../advent.rkt")
+(provide today)
 
-(define parse (curry map s->i))
+(define parse (curry map string->number))
 
 ; Given a list lst of n integers, return a list r of n - 1 bools, where:
 ;   r[i] = lst[i] < lst[i + 1]
@@ -32,17 +32,13 @@
       (reverse ws)
       (loop (cons (take lst w) ws) (cdr lst)))))
 
-(define solve
-  (fork
-    ; Part A: count the number of true entries in the increasing list for
-    ; the input.
-    (compose (curry count identity)
-             increasing)
-    ; Part B: count the number of true entries in the increasinst list for
-    ; the list of sums of windows of length 3 of the input.
-    (compose (curry count identity)
-             increasing
-             (curry map sum)
-             (curry wnds 3))))
+(define sum (curry foldl + 0))
 
-(solve! 1 parse solve)
+(define extract identity)
+(define solve-a (compose (curry count identity) increasing))
+(define solve-b (compose (curry count identity)
+                         increasing
+                         (curry map sum)
+                         (curry wnds 3)))
+
+(define today (list parse extract solve-a solve-b (const #t)))
