@@ -5,9 +5,15 @@
 
 (provide string->point unitize-point point+ point-)
 (provide line->points line-cardinal?)
+(provide point-neighbors points-coplanar-in?)
+(provide *origin-point*)
+
+(define plane? (or/c 'x 'y 'z))
 
 (struct point (x y z) #:transparent)
 (struct line (start end) #:transparent)
+
+(define *origin-point* (point 0 0 0))
 
 (define (string->point s)
   (let ((ps (string-split s ",")))
@@ -52,3 +58,15 @@
       (or (and (= sx ex) (= sy ey))
           (and (= sx ex) (= sz ez))
           (and (= sy ey) (= sz ez))))))
+
+(define (point-neighbors p)
+  (let ((ds (remove '(0 0 0)
+                     (cartesian-product '(-1 0 1) '(-1 0 1) '(-1 0 1)))))
+    (map (compose (curry point+ p) (curry apply point)) ds)))
+
+(define (points-coplanar-in? plane a b)
+  (case plane
+    [(x) (= (point-x a) (point-x b))]
+    [(y) (= (point-y a) (point-y b))]
+    [(z) (= (point-z a) (point-z b))]
+    [else (error "plane ~a" plane)]))
