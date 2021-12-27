@@ -13,7 +13,7 @@
 ; for which every bit is the least common bit. If there are ties, for
 ; most common take the ones with 1, and for least common take the ones with 0.
 
-(require "../../advent.rkt")
+(provide today)
 
 (define parse
   (curry map
@@ -76,9 +76,13 @@
     (* (apply f args)
        (apply g args))))
 
-(define solve
-  (fork
-    (pfork gamma epsilon)
-    (pfork o2gen co2scr)))
+(define (extract s)
+  (list (gamma s) (epsilon s) (o2gen s) (co2scr s)))
 
-(solve! 3 parse solve)
+(define (solve-a e)
+  (* (first e) (second e)))
+
+(define (solve-b e)
+  (* (third e) (fourth e)))
+
+(define today (list parse extract solve-a solve-b (const #t)))
