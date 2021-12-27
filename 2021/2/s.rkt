@@ -1,6 +1,7 @@
 #lang racket
 
-(require "../../advent.rkt")
+(require "../../lib/list.rkt")
+(provide today)
 
 (define order? (list/c symbol? integer?))
 
@@ -10,12 +11,11 @@
   (-> (listof string?) (listof order?))
   (curry map
     (compose
-        (curryr project s->y s->i)
+        (curryr project string->symbol string->number)
         (curryr string-split " "))))
 
 ; Given an order and an existing Part A state, return the new Part A state.
-(define/contract (walk-a i p)
-  (-> order? point2? point2?)
+(define (walk-a i p)
   (let ((dir (first i)) (arg (second i))
         (h (first p)) (v (second p)))
     (case dir
@@ -25,8 +25,7 @@
       [else (error i)])))
 
 ; Given an order and an existing Part B state, return the new Part B state.
-(define/contract (walk-b i p)
-  (-> order? point3? point3?)
+(define (walk-b i p)
   (let ((dir (first i)) (arg (second i))
         (h (first p)) (v (second p)) (a (third p)))
     (case dir
@@ -35,14 +34,13 @@
       [(forward) (list (+ h arg) (+ v (* a arg)) a)]
       [else (error i)])))
 
-(define solve
-  (fork
-    ; apply all the orders in order, starting at (0 0), then multiply
-    (compose prod
-             (curry foldl walk-a '(0 0)))
-    ; same, but only multiply height & width, not aim
-    (compose prod
-             (curryr take 2)
-             (curry foldl walk-b '(0 0 0)))))
+(define prod (curry foldl * 1))
 
-(solve! 2 parse solve)
+(define solve-a
+  (compose prod (curry foldl walk-a '(0 0))))
+(define solve-b
+  (compose prod
+           (curryr take 2)
+           (curry foldl walk-b '(0 0 0))))
+
+(define today (list parse identity solve-a solve-b (const #t)))

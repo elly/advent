@@ -76,24 +76,25 @@
            (equal? (first c) pa)
            (equal? (second c) pb))))
 
-(define (run-on-path-pair d ps)
+(define (run-on-path-pair d v ps)
   (let ((in (lines-from-file (car ps)))
         (out (and (file-exists? (cdr ps)) (datums-from-file (cdr ps)))))
     (let* ((i ((day-parse d) in))
            (e ((day-extract d) i))
            (pa ((day-solve-a d) e))
            (pb ((day-solve-b d) e)))
-      (report-result d ps "a" pa)
-      (report-result d ps "b" pb)
-      (compare-results d out pa pb))))
+      (when (or v (not (compare-results d out pa pb)))
+        (begin
+          (report-result d ps "a" pa)
+          (report-result d ps "b" pb))))))
 
 (define (check d)
   (let ((ps (paths-for-check d)))
-    (when (not (andmap (curry run-on-path-pair d) ps))
+    (when (not (andmap (curry run-on-path-pair d #f) ps))
           (error "check mismatch"))))
 
 (define (solve d)
-  (when (not (run-on-path-pair d (path-for-solve d)))
+  (when (not (run-on-path-pair d #t (path-for-solve d)))
         (error "solve mismatch")))
 
 (define (test day)
