@@ -1,8 +1,8 @@
 #lang racket
 
 (provide today)
-(require "../../lib/geom.rkt")
-(require data/heap)
+(require "../../lib/geom.rkt"
+         "../../lib/graph.rkt")
 
 ; Day 23: Amphipod
 ; We have a little maze-map with some amphipods in it, which are represented by
@@ -182,40 +182,6 @@
 
   (append (room-hallway-moves s) (hallway-room-moves s)))
 
-(define (heuristic s)
-  ; Surely you are joking? This runs basically instantly even with no heuristic
-  ; (i.e. in straight Dijkstra mode)
-  0)
-
-(define (astar ss es)
-  (define opens (make-heap (lambda (s0 s1) (<= (cdr s0) (cdr s1)))))
-  (define camefrom (make-hash))
-  (define gscore (make-hash (list (cons ss 0))))
-  (define done #f)
-
-  (define *infinity* 9999999999)
-  (define (gsq s) (hash-ref gscore s *infinity*))
-
-  (heap-add! opens (cons ss (heuristic (cons ss 0))))
-
-  (do ()
-      ((or (= (heap-count opens) 0) done))
-    (let* ((c (heap-min opens))
-           (cn (car c)) (cc (cdr c)))
-      (heap-remove-min! opens)
-      (let ((ns (neighbors (car c))))
-        (for/list ((n ns))
-          (let ((nn (car n)) (nc (cdr n)))
-            (let ((tg (+ (gsq cn) nc)))
-              (when (< tg (gsq nn))
-                  (begin
-                    (hash-set! camefrom nn cn)
-                    (hash-set! gscore nn tg)
-                    (heap-add! opens (cons nn (+ tg (heuristic n))))))))))
-        (when (equal? (car c) es)
-            (set! done #t))))
-  (gsq es))
-
 (define extract identity)
 
 (define *final-state-a*
@@ -229,7 +195,8 @@
          4))
 
 (define (solve-a ss)
-  (astar ss *final-state-a*))
+  (let-values ([(cost path) (astar ss *final-state-a* neighbors (const 0))])
+    cost))
 
 (define (augment-for-b ss)
   (define (rv i) (vector-ref (state-rooms ss) i))
@@ -243,6 +210,8 @@
     (roomdepth 4)))
 
 (define (solve-b ss)
-  (astar (augment-for-b ss) *final-state-b*))
+  (let ((ss (augment-for-b ss)))
+    (let-values ([(cost path) (astar ss *final-state-b* neighbors (const 0))])
+      cost)))
 
 (define today (list parse extract solve-a solve-b (const #t)))
