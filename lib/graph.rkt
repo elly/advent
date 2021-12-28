@@ -1,8 +1,11 @@
 #lang racket
 
-(provide astar)
+(provide astar dijkstra)
 (require data/heap)
 
+; ss and es are states (arbitrary types); nf maps a state to a list of
+; (state, cost) pairs; hf maps a state to a guess for the cost of reaching
+; that state.
 (define (astar ss es nf hf)
   (define opens (make-heap (lambda (s0 s1) (<= (cdr s0) (cdr s1)))))
   (define camefrom (make-hash))
@@ -36,3 +39,6 @@
           (reverse (cons e p))
           (loop (hash-ref camefrom e) (cons e p)))))
   (values (gsq es) path))
+
+(define (dijkstra ss es nf)
+  (astar ss es nf (const 0)))
