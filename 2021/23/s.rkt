@@ -1,7 +1,5 @@
 #lang racket
 
-(require "../../advent.rkt")
-
 ; Day 23: Amphipod
 ;
 ; We have a little map of a maze and creatures (amphipods) that want to move
