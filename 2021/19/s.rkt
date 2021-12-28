@@ -1,6 +1,8 @@
 #lang racket
 
-(require "../../advent.rkt")
+(provide today)
+(require "../../lib/geom.rkt"
+         "../../lib/list.rkt")
 
 ; Day 19: Beacon Scanner
 ;
@@ -14,7 +16,7 @@
 ; So, we can represent our input as a list of scanner results, each of which
 ; is a set of integer vectors.
 
-(define beacon? (vectorof (listof integer?)))
+(define beacon? (vectorof point?))
 (struct scan-result (orientation location beacons) #:transparent)
 
 (define (update-orientation sr n)
@@ -29,16 +31,16 @@
 (define located-scan-result? (and/c scan-result? oriented? located?))
 
 (define/contract (scan-result-plane s n)
-  (-> scan-result? integer? (set/c point3?))
+  (-> scan-result? integer? (set/c point?))
   (list->set (map (curryr vector-ref n)
                   (set->list (scan-result-beacons s)))))
 
 (define/contract (oriented-points s)
-  (-> oriented-scan-result? (set/c point3?))
+  (-> oriented-scan-result? (set/c point?))
   (scan-result-plane s (scan-result-orientation s)))
 
 (define/contract (canonical-points s)
-  (-> located-scan-result? (set/c point3?))
+  (-> located-scan-result? (set/c point?))
   (list->set
      (map (curryr point+ (scan-result-location s))
        (set->list (scan-result-plane s (scan-result-orientation s))))))
@@ -59,13 +61,12 @@
              list->set
              (curry map (compose list->vector
                                  rotations-of
-                                 (curry map s->i)
-                                 (curryr string-split ",")))
+                                 string->point))
              cdr))
   (map parse-result (split-results ls)))
 
 (define/contract (make-delta-set ps)
-  (-> (set/c point3?) (values (set/c point3?) hash?))
+  (-> (set/c point?) (values (set/c point?) hash?))
   (let ((lps (set->list ps)))
     (let loop ((s (set)) (m (hash))
                (pc (append (combinations lps 2)
@@ -76,7 +77,7 @@
             (loop (set-add s d) (hash-set m d (car pc)) (cdr pc)))))))
 
 (define/contract (points-for-delta-set m ps)
-  (-> hash? (set/c point3?) (set/c point3?))
+  (-> hash? (set/c point?) (set/c point?))
   (let ((pps (map (curry hash-ref m) (set->list ps))))
     (list->set (apply append pps))))
 
@@ -90,7 +91,7 @@
   (-> oriented-scan-result? scan-result? (or/c oriented-scan-result? #f))
 
   (define/contract (rotation-matches? ad am b rn)
-    (-> (set/c point3?) hash? scan-result? integer? boolean?)
+    (-> (set/c point?) hash? scan-result? integer? boolean?)
     (let-values ([(bd bm) (make-delta-set (scan-result-plane b rn))])
       (let ((r (set-count (points-for-delta-set am (set-intersect ad bd)))))
         (>= r (min 12 (set-count (scan-result-plane b rn)))))))
@@ -132,7 +133,7 @@
       (or/c located-scan-result? #f))
 
   (define/contract (matching-points ap bp v)
-    (-> (set/c point3?) (set/c point3?) point3? integer?)
+    (-> (set/c point?) (set/c point?) point? integer?)
     (let ((bps (list->set (map (curry point+ v) (set->list bp)))))
       ; (printf "mp ~a ~a ~a -> ~a~n" (set-count ap) (set-count bps)
       ;         v (set-count (set-intersect ap bps)))
@@ -151,7 +152,7 @@
 
 (define/contract (locate-first srs)
   (-> (listof oriented-scan-result?) (listof oriented-scan-result?))
-  (cons (update-location (car srs) '(0 0 0)) (cdr srs)))
+  (cons (update-location (car srs) *origin-point*) (cdr srs)))
 
 (define/contract (locate-some srs)
   (-> (listof oriented-scan-result?) (listof oriented-scan-result?))
@@ -182,12 +183,8 @@
 (define/contract (furthest-scanners lr)
   (-> (listof located-scan-result?) integer?)
 
-  (define/contract (manhattan a b)
-    (-> point3? point3? integer?)
-    (sum (map abs (point- a b))))
-
   (let ((sps (map scan-result-location lr)))
-    (let ((mds (map (curry apply manhattan) (combinations sps 2))))
+    (let ((mds (map (curry apply point-manhattan) (combinations sps 2))))
       (apply max mds))))
 
 (define solve
@@ -197,4 +194,7 @@
         (count-unique-points lr)
         (furthest-scanners lr)))))
 
-(solve! 19 parse solve)
+(define extract (compose locate-all orient-all))
+
+(define today (list parse extract count-unique-points furthest-scanners
+                    (const #t)))
