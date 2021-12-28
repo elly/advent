@@ -1,6 +1,7 @@
 #lang racket
 
-(require "../../advent.rkt")
+(provide today)
+(require "../../lib/func.rkt")
 (require srfi/60)
 
 ; Day 20: Trench Map
@@ -72,9 +73,5 @@
 (define (solve-part n p)
   (lit-pixels (iterate-n (curry enhance (car p)) n (cdr p))))
 
-(define solve
-  (fork
-    (curry solve-part 2)
-    (curry solve-part 50)))
-
-(solve! 20 parse solve)
+(define today (list parse identity (curry solve-part 2) (curry solve-part 50)
+              (const #t)))
