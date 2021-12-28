@@ -1,6 +1,9 @@
 #lang racket
 
-(require "../../advent.rkt")
+(provide today)
+(require "../../lib/func.rkt"
+         "../../lib/geom.rkt"
+         "../../lib/vec.rkt")
 
 ; Day 25: Sea Cucumbers
 ;
@@ -10,7 +13,6 @@
 ; the bottom of the map, they wrap around to the top; ditto right to left. We
 ; want to find the first step where nothing can move.
 
-(define point? (cons/c integer? integer?))
 (define herd? (set/c point?))
 (struct state (rows cols east south) #:transparent)
 
@@ -19,11 +21,10 @@
 
   (define/contract (parse-herd ls c)
     (-> (listof string?) char? herd?)
-    (let ((vs (list->vec2 (map string->list ls))))
+    (let ((vs (line-list->vec2 identity ls)))
       (list->set
-        (filter-map (lambda (i) (and (equal? (vec2-at vs i) c)
-                                     (cons (first i) (second i))))
-                    (vec2-indexes vs)))))
+        (filter (lambda (i) (equal? (vec2-at vs i) c))
+                (vec2-points vs)))))
 
   (state
     (length ls)
@@ -32,8 +33,9 @@
     (parse-herd ls #\v)))
 
 (define (point+m xm ym p q)
-  (cons (modulo (+ (car p) (car q)) xm)
-        (modulo (+ (cdr p) (cdr q)) ym)))
+  (let ((xs (+ (point-x p) (point-x q)))
+        (ys (+ (point-y p) (point-y q))))
+    (point (modulo xs xm) (modulo ys ym) 0)))
 
 (define (move-herd st h d)
   (let ((om (set-union (state-east st) (state-south st))))
@@ -46,22 +48,18 @@
                 c)))))))
 
 (define (step st)
-  (let* ((eh (move-herd st (state-east st) (cons 1 0)))
+  (let* ((eh (move-herd st (state-east st) (point 1 0 0)))
          (st (struct-copy state st (east eh)))
-         (sh (move-herd st (state-south st) (cons 0 1)))
+         (sh (move-herd st (state-south st) (point 0 1 0)))
          (st (struct-copy state st (south sh))))
     st))
 
 (define (step-until-fixed st)
-  (let loop ((n 0) (st st))
-    (let ((nst (step st)))
-      (if (equal? st nst)
-          (add1 n)
-          (loop (add1 n) nst)))))
+  (add1
+    (cdr
+      (iterate-until
+        (lambda (s) (cons (step (car s)) (add1 (cdr s))))
+        (lambda (o n) (equal? (car o) (car n)))
+        (cons st 0)))))
 
-(define solve
-  (fork
-    step-until-fixed
-    (const 0)))
-
-(solve! 25 parse solve)
+(define today (list parse identity step-until-fixed (const #f) (const #t)))
