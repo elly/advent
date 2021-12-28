@@ -1,6 +1,6 @@
 #lang racket
 
-(require "../../advent.rkt")
+(provide today)
 
 ; Day 21: Dirac Dice
 ; Players play on a circular track with spaces marked 1 through 10; each one has
@@ -19,7 +19,12 @@
 ; The input is the two players' starting positions:
 (define/contract parse
   (-> (listof string?) (listof player?))
-  (curry map (compose (curry player 0) s->i fifth (curryr string-split " "))))
+  (curry map
+    (compose
+      (curry player 0)
+      string->number
+      fifth
+      (curryr string-split " "))))
 
 (define/contract (wrap n m)
   (-> integer? integer? integer?)
@@ -105,9 +110,4 @@
   (let ((r (wc (first ps) (second ps))))
     (if (> (car r) (cdr r)) (car r) (cdr r))))
 
-(define solve
-  (fork
-    play
-    quantum-play))
-
-(solve! 21 parse solve)
+(define today (list parse identity play quantum-play (const #t)))
