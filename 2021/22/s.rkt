@@ -1,6 +1,6 @@
 #lang racket
 
-(require "../../advent.rkt")
+(provide today)
 
 ; Day 22: Reactor Reboot
 ;
@@ -20,7 +20,7 @@
   (define/contract (parse-range r)
     (-> string? range?)
     (let* ((rp (string-split (second (string-split r "=")) "..")))
-      (cons (s->i (first rp)) (s->i (second rp)))))
+      (cons (string->number (first rp)) (string->number (second rp)))))
 
   (map
     (lambda (li)
@@ -124,14 +124,12 @@
 
 (define *part-a-box* '((-50 . 50) (-50 . 50) (-50 . 50)))
 
-(define solve
-  (fork
-    (compose sum-volumes
-             list->set
-             (curry filter-map (curry intersect *part-a-box*))
-             set->list
-             (curry foldl step (set)))
-    (compose sum-volumes
-             (curry foldl step (set)))))
+(define extract (curry foldl step (set)))
 
-(solve! 22 parse solve)
+(define solve-a
+  (compose sum-volumes
+           list->set
+           (curry filter-map (curry intersect *part-a-box*))
+           set->list))
+
+(define today (list parse extract solve-a sum-volumes (const #t)))
