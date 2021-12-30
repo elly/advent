@@ -12,4 +12,4 @@
 (define today (list (curryr icvm-load 8192)
                     identity
                     solve-a
-                    solve-b (const #t)))
+                    solve-b))

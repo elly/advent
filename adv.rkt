@@ -38,7 +38,10 @@
          (y (string->number (path-element->string (first pc))))
          (d (string->number (path-element->string (second pc)))))
     (day y d (first spec) (second spec) (third spec) (fourth spec)
-             (fifth spec) dp)))
+             (if (>= (length spec) 5)
+                 (fifth spec)
+                 (const #t))
+       dp)))
 
 (define/contract (load-day dirpath)
   (-> path? (or/c day? #f))
