@@ -4,13 +4,11 @@
 (require "../intcode.rkt")
 
 (define parse
-  (compose make-icvm
+  (compose (curryr make-icvm 8192)
            list->vector
            (curry map string->number)
            (curryr string-split ",")
            car))
-
-(define extract identity)
 
 (define (run-with vm a b)
   (let ((vm (icvm-copy vm)))
@@ -30,4 +28,4 @@
     (cartesian-product (build-list 100 identity)
                        (build-list 100 identity))))
 
-(define today (list parse extract solve-a solve-b (const #t)))
+(define today (list parse identity solve-a solve-b (const #t)))
