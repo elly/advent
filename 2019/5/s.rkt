@@ -5,5 +5,5 @@
 
 (define today (list (curryr icvm-load 8192)
                     identity
-                    (curryr with-fixed-io '(1) last)
-                    (curryr with-fixed-io '(5) last)))
+                    (compose (curryr with-fixed-io '(1) last) icvm-copy)
+                    (compose (curryr with-fixed-io '(5) last) icvm-copy)))

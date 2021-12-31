@@ -5,7 +5,7 @@
          icvm-memref icvm-memset!
          icvm-step! icvm-run!
          set-icvm-inproc! set-icvm-outproc!
-         set-icvm-trace!
+         set-icvm-halted! set-icvm-trace!
 
          with-fixed-io)
 
@@ -35,7 +35,7 @@
   (set-icvm-halted! vm #t))
 
 (define (op-halt vm)
-  (set-icvm-halted! vm #t))
+  (set-icvm-halted! vm 'halt))
 
 (define (op-add vm a b c)
   (iwrite! vm c (+ (iread vm a) (iread vm b))))
@@ -44,7 +44,10 @@
   (iwrite! vm c (* (iread vm a) (iread vm b))))
 
 (define (op-in vm a)
-  (iwrite! vm a ((icvm-inproc vm))))
+  (let ((iv ((icvm-inproc vm))))
+    (when (not (integer? iv))
+          (error "woah!" iv))
+    (iwrite! vm a iv)))
 
 (define (op-out vm a)
   ((icvm-outproc vm) (iread vm a)))
@@ -133,8 +136,7 @@
     (icvm-step! vm)))
 
 (define (with-fixed-io vm ins p)
-  (let ((outs (list))
-        (vm (icvm-copy vm)))
+  (let ((outs (list)))
     (set-icvm-inproc! vm
       (lambda ()
         (if (null? ins)
