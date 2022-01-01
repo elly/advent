@@ -9,7 +9,7 @@
 
          with-fixed-io)
 
-(struct icvm (mem pc halted trace imap inproc outproc) #:mutable)
+(struct icvm (mem pc relbase halted trace imap inproc outproc) #:mutable)
 
 (define (icvm-memref ic i)
   (vector-ref (icvm-mem ic) i))
@@ -24,12 +24,14 @@
   (case (cdr a)
     ((imm) (car a))
     ((pos) (icvm-memref vm (car a)))
+    ((rel) (icvm-memref vm (+ (car a) (icvm-relbase vm))))
     (else (error "read mode ~a~n" a))))
 
 (define (iwrite! vm a v)
   (case (cdr a)
     ((imm) (error "write to imm ~a~n" a))
-    ((pos) (icvm-memset! vm (car a) v))))
+    ((pos) (icvm-memset! vm (car a) v))
+    ((rel) (icvm-memset! vm (+ (car a) (icvm-relbase vm)) v))))
 
 (define (op-unimpl vm)
   (set-icvm-halted! vm #t))
@@ -67,6 +69,9 @@
 (define (op-eq vm a b c)
   (iwrite! vm c (if (= (iread vm a) (iread vm b)) 1 0)))
 
+(define (op-arb vm a)
+  (set-icvm-relbase! vm (+ (icvm-relbase vm) (iread vm a))))
+
 (define (build-imap)
   (let ((v (build-vector 100 (const op-unimpl))))
     (vector-set! v 1 op-add)
@@ -77,6 +82,7 @@
     (vector-set! v 6 op-jf)
     (vector-set! v 7 op-lt)
     (vector-set! v 8 op-eq)
+    (vector-set! v 9 op-arb)
     (vector-set! v 99 op-halt)
     v))
 
@@ -84,7 +90,7 @@
   (-> (vectorof integer?) integer? icvm?)
   (let ((m (build-vector msz (const 0))))
     (vector-copy! m 0 mem)
-    (icvm m 0 #f #f (build-imap) (const #f) (const #f))))
+    (icvm m 0 0 #f #f (build-imap) (const #f) (const #f))))
 
 (define/contract (icvm-load is msz)
   (-> (listof string?) integer? icvm?)
@@ -103,6 +109,7 @@
     (case mn
       ((0) 'pos)
       ((1) 'imm)
+      ((2) 'rel)
       (else (error "bad mode ~a~n" mn))))
 
   (define (decode vm in)
