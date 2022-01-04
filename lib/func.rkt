@@ -1,6 +1,6 @@
 #lang racket
 
-(provide iterate-n iterate-until)
+(provide iterate-n iterate-until buffered)
 
 ; Given a function, a count, and a value, repeatedly apply that function
 ; to that value that many times. For example:
@@ -22,3 +22,14 @@
       (if (p x nx)
           x
           (loop nx)))))
+
+(define/contract (buffered p n)
+  (-> procedure? integer? procedure?)
+  (let ((vs (list)))
+    (lambda (v)
+      (let ((nv (cons v vs)))
+        (if (= (length nv) n)
+            (begin
+              (set! vs (list))
+              (apply p (reverse nv)))
+            (set! vs (cons v vs)))))))
