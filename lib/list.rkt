@@ -1,6 +1,6 @@
 #lang racket
 
-(provide project stanza sum prod)
+(provide project stanza divide-list sum prod)
 
 ; This function finds a projection of the supplied list with the supplied
 ; list of transformations by applying transformations to corresponding elements
@@ -23,6 +23,15 @@
       [(null? lst) (if r (list (reverse r)) '())]
       [(sp (car lst)) (cons (reverse r) (stanza sp (cdr lst)))]
       [else (loop (cons (car lst) r) (cdr lst))])))
+
+(define/contract (divide-list lst n)
+  (-> list? integer? (listof list?))
+  (cond
+    ((null? lst) (list))
+    ((< (length lst) n) (list lst))
+    (else
+      (cons (take lst n)
+            (divide-list (drop lst n) n)))))
 
 (define sum (curry foldl + 0))
 (define prod (curry foldl * 1))
