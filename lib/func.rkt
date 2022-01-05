@@ -23,8 +23,9 @@
           x
           (loop nx)))))
 
-(define/contract (buffered p n)
-  (-> procedure? integer? procedure?)
+; Produce a unary function wrapping p that calls p after n values have been
+; accumulated.
+(define (buffered p n)
   (let ((vs (list)))
     (lambda (v)
       (let ((nv (cons v vs)))
