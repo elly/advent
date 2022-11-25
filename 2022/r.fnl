@@ -11,6 +11,16 @@
 ; and maybe also:
 ;   read
 ;   check
+;
+; The intended design is that:
+; read    is given the input lines (as a table) and returns whatever data
+;         structure is needed to solve the problem
+; solve-a takes the data structure from read and solves part a
+; solve-b takes the data structure from read and solves part b
+; check   runs unit tests - it has no return value, so it should either finish
+;         or crash the program with assert
+; If no read is provided, the default one just returns the input as an array
+; of lines. If no check is provided, the default one does nothing.
 
 (local fennel (require :fennel))
 (fn _G.pretty [x] (print (fennel.view x)))
