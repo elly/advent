@@ -9,14 +9,45 @@
 ;   solve-a
 ;   solve-b
 ; and maybe also:
-;   parse
-;   extract
+;   read
 ;   check
 
-(let [m (require (.. (. arg 1) "/s"))]
-  (let [solve-a (. m :solve-a)]
-       [solve-b (. m :solve-b)]
-       [parse (or (. m :parse) default-parse)]
-       [extract (or (. m :extract) default-extract)]
-       [check (or (. m :check) default-check)]
-    ))
+(local fennel (require :fennel))
+(fn _G.pretty [x] (print (fennel.view x)))
+
+(fn default-read [v] v)
+(fn default-check [] true)
+
+(fn fp [args s] (.. (. args 1) "/" (. args 2) "." s))
+
+(fn lines-from-file [name dflt]
+  (let [fin (io.open name "r")]
+    (if
+      fin (icollect [line (fin:lines)] line)
+      dflt dflt
+      (assert false (.. "?f " name)))))
+
+(fn verify-output [n got expected]
+  (if
+    (not expected) (print (.. n ": " got))
+    (not (= (.. "" got) (.. "" expected)))
+      (print (.. n ": " got " (bad " expected ")"))
+    (print (.. n ": " got " (ok)"))))
+
+(fn main [args]
+  (assert (>= (length args) 2) "usage: day input")
+  (let [mod (require (.. (. args 1) "/s"))
+        input (lines-from-file (fp args "in"))
+        output (lines-from-file (fp args "out") [])]
+    (let [solve-a (. mod :solve-a)
+          solve-b (. mod :solve-b)
+          read (or (. mod :read) default-read)
+          check (or (. mod :check) default-check)]
+      (check)
+      (let [p (read input)
+            a (solve-a p)
+            b (solve-b p)]
+        (verify-output :a a (. output 1))
+        (verify-output :b b (. output 2))))))
+
+(main arg)
