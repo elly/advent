@@ -1,4 +1,4 @@
-#!/usr/bin/env fennel
+#!/usr/bin/fennel5.4
 
 ; This is the runner for my Fennel Advent solutions. You run it like this:
 ;   ./r.fnl <day number> <input type>
