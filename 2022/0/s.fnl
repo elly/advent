@@ -9,18 +9,20 @@
 ; and to do part b, it produces a depth table which the solution finds a max
 ; depth from. Simple :)
 
+(local str (require "../lib/str"))
+(local tbl (require "../lib/tbl"))
+
+(fn add1 [x] (+ x 1))
+(fn sub1 [x] (- x 1))
+
 (fn freqs [t]
-  (let [r { :left 0 :right 0 }]
-    (each [c (t:gmatch ".")]
-      (if
-        (= c "(") (tset r :left (+ (. r :left) 1))
-        (= c ")") (tset r :right (+ (. r :right) 1))))
-    r))
+  (accumulate [r {} c (str.chars t)]
+    (tbl.update r c add1 0)))
 
 (fn depths [t]
   (var r {})
   (var d 0)
-  (each [c (t:gmatch ".")]
+  (each [c (str.chars t)]
     (if
       (= c "(") (set d (+ d 1))
       (= c ")") (set d (- d 1))
@@ -44,8 +46,8 @@
 
 (fn check []
   (let [fs (freqs "(a(b)(c)d)")]
-    (assert (= (. fs :left) 3))
-    (assert (= (. fs :right) 3)))
+    (assert (= (. fs "(") 3))
+    (assert (= (. fs ")") 3)))
   (let [ds (depths "(a(b)(c)d)")]
     (assert (= 1 (. ds :a)))
     (assert (= 2 (. ds :b)))
@@ -55,6 +57,6 @@
 {
   :read read
   :check check
-  :solve-a (fn [t] (. t :freqs :left))
+  :solve-a (fn [t] (. t :freqs "("))
   :solve-b (fn [t] (deepest (. t :depths)))
 }
