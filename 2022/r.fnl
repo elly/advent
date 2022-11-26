@@ -38,11 +38,12 @@
       (assert false (.. "?f " name)))))
 
 (fn verify-output [n got expected]
-  (if
-    (not expected) (print (.. n ": " got))
-    (not (= (.. "" got) (.. "" expected)))
-      (print (.. n ": " got " (bad " expected ")"))
-    (print (.. n ": " got " (ok)"))))
+  (let [got (or got "(nil)")]
+    (if
+      (not expected) (print (.. n ": " got))
+      (not (= (.. "" got) (.. "" expected)))
+        (print (.. n ": " got " (bad " expected ")"))
+      (print (.. n ": " got " (ok)")))))
 
 (fn main [args]
   (assert (>= (length args) 2) "usage: day input")
