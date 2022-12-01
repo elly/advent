@@ -8,35 +8,38 @@
 (local str (require "../lib/str"))
 (local tbl (require "../lib/tbl"))
 
-(fn snackiest [t]
-  (var r (tbl.map t tbl.sum))
-  (table.sort r (fn [x y] (> x y)))
-  r)
+(fn snackiest [t n]
+  (-> t
+      (tbl.map tbl.sum)
+      (tbl.sorted #(> $1 $2))
+      (tbl.take n)))
 
 (fn read [lines]
-  (tbl.splitby
-    (tbl.map lines str.tonumz)
-    (fn [x] (= x 0))))
+  (-> lines
+      (tbl.map str.tonumz)
+      (tbl.splitby #(= $1 0))))
 
 (fn solve-a [x]
-  (. (snackiest x) 1))
+  (-> (snackiest x 1)
+      tbl.sum))
 
 (fn solve-b [x]
-  (tbl.sum (tbl.take (snackiest x) 3)))
+  (-> (snackiest x 3)
+      tbl.sum))
 
 (fn check []
   (let [in ["10" "20" "" "30" "40" "" "50"]
         r (read in)]
-    (assert (tbl.arrayeq (. r 1) [10 20]))
-    (assert (tbl.arrayeq (. r 2) [30 40]))
-    (assert (tbl.arrayeq (. r 3) [50])))
+    (assert (tbl.aeq (. r 1) [10 20]))
+    (assert (tbl.aeq (. r 2) [30 40]))
+    (assert (tbl.aeq (. r 3) [50])))
   (let [t [[1 2 3] [4 5] [7]]
-        r (snackiest t)]
-    (assert (tbl.arrayeq r [9 7 6]))))
+        r (snackiest t 2)]
+    (assert (tbl.aeq r [9 7]))))
 
 {
-  :read read
-  :check check
-  :solve-a solve-a
-  :solve-b solve-b
+  : read
+  : check
+  : solve-a
+  : solve-b
 }

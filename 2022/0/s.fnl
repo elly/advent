@@ -49,8 +49,8 @@
     (assert (= 1 (. ds :d)))))
 
 {
-  :read read
-  :check check
+  : read
+  : check
   :solve-a (fn [t] (. t :freqs "("))
   :solve-b (fn [t] (tbl.maxval (. t :depths)))
 }

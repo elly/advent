@@ -1,22 +1,28 @@
 ; lib/tbl: table library
 
-(fn arrayeq [t0 t1]
+(fn aeq [t0 t1]
   (var r true)
-  (each [k v (pairs t0)]
+  (each [k v (ipairs t0)]
     (if (not (= v (. t1 k)))
         (set r false)))
   r)
 
+(fn acopy [t]
+  (var r {})
+  (each [_ v (ipairs t)]
+    (table.insert r v))
+  r)
+
 (fn map [t f]
   (var r {})
-  (each [_ v (pairs t)]
-    (table.insert r (f v)))
+  (each [k v (pairs t)]
+    (tset r k (f v)))
   r)
 
 (fn maximize [t f]
   (var mv 0)
   (var mk nil)
-  (var f (or f (fn [x] x)))
+  (var f (or f #$1))
   (each [k v (pairs t)]
     (let [nv (f v)]
       (if (> nv mv)
@@ -27,6 +33,11 @@
 
 (fn maxval [t f]
   (. t (maximize t f)))
+
+(fn sorted [t f]
+  (var r (acopy t))
+  (table.sort r f)
+  r)
 
 (fn splitby [t f]
   (var r {})
@@ -55,12 +66,14 @@
   (tset t k (f (or (. t k) d))))
 
 {
-  :arrayeq arrayeq
-  :map map
-  :maximize maximize
-  :maxval maxval
-  :splitby splitby
-  :sum sum
-  :take take
-  :update update
+  : aeq
+  : acopy
+  : map
+  : maximize
+  : maxval
+  : sorted
+  : splitby
+  : sum
+  : take
+  : update
 }
