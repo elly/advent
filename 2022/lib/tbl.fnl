@@ -1,5 +1,12 @@
 ; lib/tbl: table library
 
+(fn arrayeq [t0 t1]
+  (var r true)
+  (each [k v (pairs t0)]
+    (if (not (= v (. t1 k)))
+        (set r false)))
+  r)
+
 (fn map [t f]
   (var r {})
   (each [_ v (pairs t)]
@@ -48,6 +55,7 @@
   (tset t k (f (or (. t k) d))))
 
 {
+  :arrayeq arrayeq
   :map map
   :maximize maximize
   :maxval maxval

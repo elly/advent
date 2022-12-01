@@ -18,25 +18,21 @@
     (tbl.map lines str.tonumz)
     (fn [x] (= x 0))))
 
-(fn check []
-  (let [in ["10" "20" "" "30" "40" "" "50"]
-        r (read in)]
-    (assert (= (. r 1 1) 10)
-            (= (. r 1 2) 20)
-            (= (. r 2 1) 30)
-            (= (. r 2 2) 40)
-            (= (. r 3 1) 50)))
-  (let [t [[1 2 3] [4 5] [7]]
-        r (snackiest t)]
-    (assert (= (. r 1) 9))
-    (assert (= (. r 2) 7))
-    (assert (= (. r 3) 6))))
-
 (fn solve-a [x]
   (. (snackiest x) 1))
 
 (fn solve-b [x]
   (tbl.sum (tbl.take (snackiest x) 3)))
+
+(fn check []
+  (let [in ["10" "20" "" "30" "40" "" "50"]
+        r (read in)]
+    (assert (tbl.arrayeq (. r 1) [10 20]))
+    (assert (tbl.arrayeq (. r 2) [30 40]))
+    (assert (tbl.arrayeq (. r 3) [50])))
+  (let [t [[1 2 3] [4 5] [7]]
+        r (snackiest t)]
+    (assert (tbl.arrayeq r [9 7 6]))))
 
 {
   :read read
