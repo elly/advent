@@ -25,6 +25,13 @@
 (local fennel (require :fennel))
 (global pretty (fn [x] (print (fennel.view x))))
 
+(fn check-lib [name]
+  (let [m (require (.. "lib/" name))]
+    ((. m :check))))
+
+(fn check-libs []
+  (check-lib "points"))
+
 (fn default-read [v] v)
 (fn default-check [] true)
 
@@ -46,7 +53,6 @@
       (print (.. n ": " got " (ok)")))))
 
 (fn main [args]
-  (assert (>= (length args) 2) "usage: day input")
   (let [mod (require (.. (. args 1) "/s"))
         input (lines-from-file (fp args "in"))
         output (lines-from-file (fp args "out") [])]
@@ -61,4 +67,6 @@
         (verify-output :a a (. output 1))
         (verify-output :b b (. output 2))))))
 
-(main arg)
+(check-libs)
+(if (>= (length arg) 2)
+    (main arg))
