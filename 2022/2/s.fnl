@@ -16,18 +16,16 @@
     :paper { :rock :win :paper :tie :scissors :loss }
   })
 
-(fn tomoves [t]
-  [(. movekey (. t 1)) (. movekey (. t 2))])
+(fn tomoves [[a b]]
+  [(. movekey a) (. movekey b)])
 
 (fn read [x]
   (tbl.map x
     #(str.split $1)))
 
-(fn roundscore [r]
-  (let [them (. r 1)
-        you (. r 2)]
-    (+ (. shapescore you)
-       (. winscore (. outcomes you them)))))
+(fn roundscore [[them you]]
+  (+ (. shapescore you)
+     (. winscore (. outcomes you them))))
 
 (fn solve-a [plays]
   (-> plays
