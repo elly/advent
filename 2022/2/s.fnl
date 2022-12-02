@@ -47,7 +47,17 @@
       (tbl.map roundscore)
       tbl.sum))
 
+(fn check []
+  (assert (= 8 (roundscore [:rock :paper])))
+  (assert (= 1 (roundscore [:paper :rock])))
+  (assert (= 6 (roundscore [:scissors :scissors])))
+
+  (assert (tbl.aeq [:rock :rock] (findmove [:A :Y])))
+  (assert (tbl.aeq [:paper :rock] (findmove [:B :X])))
+  (assert (tbl.aeq [:scissors :rock] (findmove [:C :Z]))))
+
 {
+  : check
   : read
   : solve-a
   : solve-b
