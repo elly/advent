@@ -3,66 +3,43 @@
 (local str (require "../lib/str"))
 (local tbl (require "../lib/tbl"))
 
-(fn tomove [x]
-  (match x
-    :A :rock :X :rock
-    :B :paper :Y :paper
-    :C :scissors :Z :scissors))
+(local moves [ :rock :paper :scissors ])
+(local movekey { :A :rock :B :paper :C :scissors :X :rock :Y :paper :Z :scissors })
+(local reskey { :X :loss :Y :tie :Z :win })
+(local shapescore { :rock 1 :paper 2 :scissors 3 })
+(local winscore { :loss 0 :tie 3 :win 6 })
 
-(fn toresult [x]
-  (match x
-    :X :loss
-    :Y :tie
-    :Z :win))
+(local outcomes
+  {
+    :rock { :rock :tie :paper :loss :scissors :win }
+    :scissors { :rock :loss :paper :win :scissors :tie }
+    :paper { :rock :win :paper :tie :scissors :loss }
+  })
+
+(fn tomoves [t]
+  [(. movekey (. t 1)) (. movekey (. t 2))])
 
 (fn read [x]
   (tbl.map x
     #(str.split $1)))
 
-(fn outcome [p o]
-  (match [p o]
-    [:rock :rock] :tie
-    [:rock :paper] :loss
-    [:rock :scissors] :win
-    [:paper :paper] :tie
-    [:paper :scissors] :loss
-    [:paper :rock] :win
-    [:scissors :scissors] :tie
-    [:scissors :rock] :loss
-    [:scissors :paper] :win))
-
-(fn shapescore [p]
-  (match p
-    :rock 1
-    :paper 2
-    :scissors 3))
-
-(fn winscore [w]
-  (match w
-    :loss 0
-    :tie 3
-    :win 6))
-
 (fn roundscore [r]
   (let [them (. r 1)
         you (. r 2)]
-    (+ (shapescore you)
-       (winscore (outcome you them)))))
+    (+ (. shapescore you)
+       (. winscore (. outcomes you them)))))
 
 (fn solve-a [plays]
   (-> plays
-      (tbl.map #(tbl.map $1 tomove))
+      (tbl.map tomoves)
       (tbl.map roundscore)
       tbl.sum))
 
 (fn findmove [r]
-  (let [them (tomove (. r 1))
-        needed (toresult (. r 2))]
-    (var z nil)
-    (each [_ m (ipairs [:rock :paper :scissors])]
-      (if (= needed (outcome m them))
-          (set z m)))
-    [them z]))
+  (let [them (. movekey (. r 1))
+        needed (. reskey (. r 2))]
+    [them
+      (tbl.find moves #(= needed (. outcomes $1 them)))]))
 
 (fn solve-b [plays]
   (-> plays

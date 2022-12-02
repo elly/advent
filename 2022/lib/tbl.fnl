@@ -13,6 +13,13 @@
     (table.insert r v))
   r)
 
+(fn find [t f]
+  (var r nil)
+  (each [_ v (ipairs t)]
+    (if (f v)
+        (set r v)))
+  r)
+
 (fn map [t f]
   (var r {})
   (each [k v (pairs t)]
@@ -68,6 +75,7 @@
 {
   : aeq
   : acopy
+  : find
   : map
   : maximize
   : maxval
