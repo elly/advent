@@ -27,7 +27,7 @@
 
 (fn check-lib [name]
   (let [m (require (.. "lib/" name))]
-    ((. m :check))))
+    (m.check)))
 
 (fn check-libs []
   (check-lib "points"))
@@ -44,26 +44,24 @@
       dflt dflt
       (assert false (.. "?f " name)))))
 
-(fn verify-output [n got expected]
+(fn verify-output [name got expected]
   (let [got (or got "(nil)")]
     (if
-      (not expected) (print (.. n ": " got))
+      (not expected) (print (.. name ": " got))
       (not (= (.. "" got) (.. "" expected)))
-        (print (.. n ": " got " (bad " expected ")"))
-      (print (.. n ": " got " (ok)")))))
+        (print (.. name ": " got " (bad " expected ")"))
+      (print (.. name ": " got " (ok)")))))
 
 (fn main [args]
   (let [mod (require (.. (. args 1) "/s"))
         input (lines-from-file (fp args "in"))
         output (lines-from-file (fp args "out") [])]
-    (let [solve-a (. mod :solve-a)
-          solve-b (. mod :solve-b)
-          read (or (. mod :read) default-read)
-          check (or (. mod :check) default-check)]
+    (let [read (or mod.read default-read)
+          check (or mod.check default-check)]
       (check)
       (let [p (read input)
-            a (solve-a p)
-            b (solve-b p)]
+            a (mod.solve-a p)
+            b (mod.solve-b p)]
         (verify-output :a a (. output 1))
         (verify-output :b b (. output 2))))))
 
