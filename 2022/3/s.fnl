@@ -7,6 +7,7 @@
 ;
 ; The solutions for part a and b fall pretty neatly out as a result :)
 
+(local const (require "../lib/const"))
 (local sset (require "../lib/sset"))
 (local str (require "../lib/str"))
 (local tbl (require "../lib/tbl"))
@@ -24,8 +25,7 @@
       sset.any))
 
 (fn prio [c]
-  (local ps "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-  (pick-values 1 (ps:find c)))
+  (pick-values 1 (const.a-zA-Z:find c)))
 
 (fn check []
   (assert (= "c" (shared [["a" "b" "c"] ["c" "d" "e"]])))
