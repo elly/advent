@@ -8,11 +8,10 @@
 (local str (require "../lib/str"))
 (local tbl (require "../lib/tbl"))
 
-(fn snackiest [t n]
+(fn snackiest [t]
   (-> t
       (tbl.map tbl.sum)
-      (tbl.sorted #(> $1 $2))
-      (tbl.take n)))
+      (tbl.sorted #(> $1 $2))))
 
 (fn read [lines]
   (-> lines
@@ -20,11 +19,13 @@
       (tbl.splitby #(= $1 0))))
 
 (fn solve-a [x]
-  (-> (snackiest x 1)
+  (-> (snackiest x)
+      (tbl.take 1)
       tbl.sum))
 
 (fn solve-b [x]
-  (-> (snackiest x 3)
+  (-> (snackiest x)
+      (tbl.take 3)
       tbl.sum))
 
 (fn check []
@@ -34,8 +35,8 @@
     (assert (tbl.aeq (. r 2) [30 40]))
     (assert (tbl.aeq (. r 3) [50])))
   (let [t [[1 2 3] [4 5] [7]]
-        r (snackiest t 2)]
-    (assert (tbl.aeq r [9 7]))))
+        r (snackiest t)]
+    (assert (tbl.aeq r [9 7 6]))))
 
 {
   : read
