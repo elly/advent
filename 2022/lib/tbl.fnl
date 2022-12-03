@@ -13,11 +13,33 @@
     (table.insert r v))
   r)
 
+(fn drop [t n]
+  (var r {})
+  (for [i (+ n 1) (length t) 1]
+    (table.insert r (. t i)))
+  r)
+
 (fn find [t f]
   (var r nil)
   (each [_ v (ipairs t)]
     (if (f v)
         (set r v)))
+  r)
+
+(fn group [t n]
+  (var r [])
+  (var cr [])
+  (var crn 0)
+  (each [_ v (ipairs t)]
+    (table.insert cr v)
+    (set crn (+ crn 1))
+    (if (= crn n)
+        (do
+          (table.insert r cr)
+          (set cr [])
+          (set crn 0))))
+  (if (> crn 0)
+      (table.insert r cr))
   r)
 
 (fn map [t f]
@@ -72,10 +94,20 @@
 (fn update [t k f d]
   (tset t k (f (or (. t k) d))))
 
+(fn check []
+  (assert (aeq [3 4] (drop [1 2 3 4] 2)))
+  (assert (aeq [1 2] (take [1 2 3 4] 2)))
+  (let [g (group [:a :b :c :d :e :f :g :h] 2)]
+    (assert (aeq [:a :b] (. g 1)))
+    (assert (aeq [:g :h] (. g 4)))))
+
 {
   : aeq
   : acopy
+  : check
+  : drop
   : find
+  : group
   : map
   : maximize
   : maxval

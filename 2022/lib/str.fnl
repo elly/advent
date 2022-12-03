@@ -3,6 +3,9 @@
 (fn chars [s]
   (s:gmatch "."))
 
+(fn explode [s]
+  (icollect [v (s:gmatch ".")] v))
+
 (fn split [s]
   (icollect [v (s:gmatch "[^%s]+")] v))
 
@@ -14,6 +17,7 @@
 
 {
   : chars
+  : explode
   : split
   : tonumz
 }

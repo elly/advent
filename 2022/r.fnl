@@ -23,14 +23,19 @@
 ; of lines. If no check is provided, the default one does nothing.
 
 (local fennel (require :fennel))
-(global pretty (fn [x] (print (fennel.view x))))
+(global pretty
+  (fn [x]
+    (print (fennel.view x))
+    x))
 
 (fn check-lib [name]
   (let [m (require (.. "lib/" name))]
     (m.check)))
 
 (fn check-libs []
-  (check-lib "points"))
+  (check-lib "points")
+  (check-lib "sset")
+  (check-lib "tbl"))
 
 (fn default-read [v] v)
 (fn default-check [] true)
