@@ -23,16 +23,9 @@
       sset.intersect
       sset.any))
 
-(fn prio [e]
-  (fn ord [c] (string.byte c 1))
-  (let [ca (ord "a") cz (ord "z")
-        cA (ord "A") cZ (ord "Z")]
-    (if (and (>= (ord e) ca)
-             (<= (ord e) cz))
-        (+ (- (ord e) ca) 1)
-        (and (>= (ord e) cA)
-             (<= (ord e) cZ))
-        (+ (- (ord e) cA) 27))))
+(fn prio [c]
+  (local ps "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+  (pick-values 1 (ps:find c)))
 
 (fn check []
   (assert (= "c" (shared [["a" "b" "c"] ["c" "d" "e"]])))
