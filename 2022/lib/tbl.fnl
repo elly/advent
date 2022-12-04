@@ -19,6 +19,13 @@
     (table.insert r (. t i)))
   r)
 
+(fn filter [t f]
+  (var r [])
+  (each [_ v (ipairs t)]
+    (if (f v)
+        (table.insert r v)))
+  r)
+
 (fn find [t f]
   (var r nil)
   (each [_ v (ipairs t)]
@@ -107,6 +114,7 @@
   : check
   : drop
   : find
+  : filter
   : group
   : map
   : maximize
