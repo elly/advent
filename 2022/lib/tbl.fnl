@@ -33,6 +33,12 @@
         (set r v)))
   r)
 
+(fn fold [t v f]
+  (var x v)
+  (each [_ v (ipairs t)]
+    (set x (f x v)))
+  x)
+
 (fn group [t n]
   (var r [])
   (var cr [])
@@ -70,6 +76,12 @@
 (fn maxval [t f]
   (. t (maximize t f)))
 
+(fn reverse [t]
+  (var r [])
+  (for [i (length t) 1 -1]
+    (table.insert r (. t i)))
+  r)
+
 (fn sorted [t f]
   (var r (acopy t))
   (table.sort r f)
@@ -106,7 +118,8 @@
   (assert (aeq [1 2] (take [1 2 3 4] 2)))
   (let [g (group [:a :b :c :d :e :f :g :h] 2)]
     (assert (aeq [:a :b] (. g 1)))
-    (assert (aeq [:g :h] (. g 4)))))
+    (assert (aeq [:g :h] (. g 4))))
+  (assert (aeq [3 2 1] (reverse [1 2 3]))))
 
 {
   : aeq
@@ -115,10 +128,12 @@
   : drop
   : find
   : filter
+  : fold
   : group
   : map
   : maximize
   : maxval
+  : reverse
   : sorted
   : splitby
   : sum
