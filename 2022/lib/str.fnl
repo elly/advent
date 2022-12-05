@@ -1,5 +1,8 @@
 ; lib/str: string library
 
+(fn allmatches [s m]
+  (icollect [v (s:gmatch m)] v))
+
 (fn chars [s]
   (s:gmatch "."))
 
@@ -16,6 +19,7 @@
         r)))
 
 {
+  : allmatches
   : chars
   : explode
   : split

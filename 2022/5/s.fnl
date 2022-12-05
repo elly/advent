@@ -3,29 +3,32 @@
 (local str (require "../lib/str"))
 (local tbl (require "../lib/tbl"))
 
+(fn stkcopy [ss]
+  (tbl.map ss tbl.acopy))
+
 (fn btabl [stacks line]
-  (for [i 2 (string.len line) 4]
-    (let [ti (/ (+ i 2) 4)
-          s (line:sub i i)]
-      (if (not (= s " "))
-        (do
-          (var t (or (. stacks ti) []))
-          (table.insert t (line:sub i i))
-          (tset stacks ti t)))))
-  stacks)
+  (let [ps (tbl.group (str.explode line) 4)]
+    (each [i v (ipairs ps)]
+      (if (not (= " " (. v 2)))
+          (table.insert (. stacks i) (. v 2))))))
 
 (fn btab [lines]
-  (-> lines
-      tbl.reverse
-      (tbl.drop 1)
-      (tbl.fold [] btabl)))
+  (let [ls (tbl.reverse lines)
+        h (. (tbl.take ls 1) 1)
+        t (tbl.drop ls 1)]
+    (var r
+      (tbl.map (str.allmatches h "%d+")
+               (fn [_] [])))
+    (each [_ v (ipairs t)]
+      (btabl r v))
+    r))
 
 (fn pinstr [instr]
-  (let [ps (str.split instr)]
+  (let [ns (str.allmatches instr "%d+")]
     {
-      :n (str.tonumz (. ps 2))
-      :from (str.tonumz (. ps 4))
-      :to (str.tonumz (. ps 6))
+      :n (str.tonumz (. ns 1))
+      :from (str.tonumz (. ns 2))
+      :to (str.tonumz (. ns 3))
     }))
 
 (fn read [x]
@@ -35,35 +38,19 @@
       :instrs (tbl.map (. ps 2) pinstr)
     }))
 
-(fn stkcopy [ss]
-  (tbl.map ss tbl.acopy))
+(fn idxmap-a [s in it] (length s))
+(fn idxmap-b [s in it] (+ (- (length s) (- in.n 1)) (- it 1)))
 
-(fn doinsn-a [ss in]
-  (let [is (. ss in.from)
-        os (. ss in.to)]
-    (for [i 1 in.n 1]
-      (var c (. is (length is)))
-      (table.insert os c)
-      (table.remove is (length is)))
-    (tset ss in.from is)
-    (tset ss in.to os))
+(fn doinsn [ss in f]
+  (for [i 1 in.n 1]
+    (let [d (f (. ss in.from) in i)]
+      (table.insert (. ss in.to) (. ss in.from d))
+      (table.remove (. ss in.from) d)))
   ss)
 
-(fn doinsn-b [ss in]
-  (let [is (. ss in.from)
-        os (. ss in.to)
-        d (- (length is) (- in.n 1))]
-    (for [i 1 in.n 1]
-      (var c (. is d))
-      (table.insert os c)
-      (table.remove is d))
-    (tset ss in.from is)
-    (tset ss in.to os))
-  ss)
-
-(fn solve [doinsn x]
+(fn solve [f x]
   (let [ss (stkcopy x.stacks)]
-    (-> (tbl.fold x.instrs ss doinsn)
+    (-> (tbl.fold x.instrs ss #(doinsn $1 $2 f))
         (tbl.map #(. $1 (length $1)))
         (table.concat ""))))
 
@@ -72,7 +59,8 @@
     (assert (= 3 in.n))
     (assert (= 6 in.from))
     (assert (= 2 in.to)))
-  (let [bt (btabl [[:Z] [:Y] [:X] [:W] [:V]] "[A] [B] [C]     [E]")]
+  (let [bt [[:Z] [:Y] [:X] [:W] [:V]]]
+    (btabl bt "[A] [B] [C]     [E]")
     (assert (tbl.aeq [:Z :A] (. bt 1)))
     (assert (tbl.aeq [:W ] (. bt 4)))
     (assert (tbl.aeq [:V :E] (. bt 5)))))
@@ -80,6 +68,6 @@
 {
   : read
   : check
-  :solve-a #(solve doinsn-a $1)
-  :solve-b #(solve doinsn-b $1)
+  :solve-a #(solve idxmap-a $1)
+  :solve-b #(solve idxmap-b $1)
 }
