@@ -7,14 +7,14 @@
 (fn read [lines] (. lines 1))
 
 (fn start-idx [s n]
-  (let [ps (str.explode s) win (cset.make)]
+  (let [chars (str.explode s) win (cset.make)]
     (var r false)
     (for [i 1 n 1]
-      (cset.add win (. ps i)))
-    (for [i (+ n 1) (length ps) 1
+      (cset.add win (. chars i)))
+    (for [i (+ n 1) (length chars) 1
           &until (not (cset.hasdupes? win))]
-      (cset.add win (. ps i))
-      (cset.del win (. ps (- i n)))
+      (cset.add win (. chars i))
+      (cset.del win (. chars (- i n)))
       (set r i))
     r))
 
