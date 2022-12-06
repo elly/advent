@@ -41,6 +41,12 @@
     (tset r v true))
   r)
 
+(fn size [t]
+  (var r 0)
+  (each [k _ (pairs t)]
+    (set r (+ r 1)))
+  r)
+
 (fn check []
   (let [s0 (of [:a :b :c])
         s1 (of [:b :c :d])
@@ -55,4 +61,5 @@
   : intersect
   : items
   : of
+  : size
 }
