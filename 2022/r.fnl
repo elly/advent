@@ -33,6 +33,7 @@
     (m.check)))
 
 (fn check-libs []
+  (check-lib "cset")
   (check-lib "points")
   (check-lib "sset")
   (check-lib "tbl"))
