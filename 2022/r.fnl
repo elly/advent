@@ -23,6 +23,7 @@
 ; of lines. If no check is provided, the default one does nothing.
 
 (local fennel (require :fennel))
+
 (global pretty
   (fn [x]
     (print (fennel.view x))
