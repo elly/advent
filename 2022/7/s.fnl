@@ -59,8 +59,20 @@
         tbl.sorted
         (. 1))))
 
+(fn check []
+  (let [fs {}]
+    (read-ls fs [:a] 100 :b)
+    (read-ls fs [:a] :dir :c)
+    (assert (= fs.a.b 100))
+    (assert (= (type fs.a.c) :table)))
+  (let [fs { :a { :b.txt 99999 :c.txt 1 } :d { :e.txt 100001 } :f { :g.txt 99999 }}]
+    (assert (tbl.aeq [99999 100000 100001 300000]
+                     (tbl.sorted (dirsizes fs))))
+    (assert (= 199999 (solve-a fs)))))
+
 {
   : read
+  : check
   : solve-a
   : solve-b
 }
