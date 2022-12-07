@@ -6,8 +6,8 @@
 (fn read-cmd [pwd [_ cmd arg]]
   (match [cmd arg]
     ["cd" "/"] []
-    ["cd" ".."] (do (table.remove pwd (length pwd)) pwd)
-    ["cd" x] (do (table.insert pwd x) pwd)
+    ["cd" ".."] (tbl.pop pwd)
+    ["cd" x] (tbl.push pwd x)
     _ pwd))
 
 (fn read-ls [fs pwd [sz name]]

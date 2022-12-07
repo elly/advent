@@ -76,6 +76,16 @@
 (fn maxval [t f]
   (. t (maximize t f)))
 
+(fn pop [t]
+  (var r (acopy t))
+  (table.remove r (length r))
+  r)
+
+(fn push [t v]
+  (var r (acopy t))
+  (table.insert r v)
+  r)
+
 (fn reverse [t]
   (var r [])
   (for [i (length t) 1 -1]
@@ -133,6 +143,8 @@
   : map
   : maximize
   : maxval
+  : pop
+  : push
   : reverse
   : sorted
   : splitby
