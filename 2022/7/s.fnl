@@ -3,14 +3,7 @@
 (local str (require "../lib/str"))
 (local tbl (require "../lib/tbl"))
 
-(fn read-cmd [pwd [_ cmd arg]]
-  (match [cmd arg]
-    ["cd" "/"] []
-    ["cd" ".."] (tbl.pop pwd)
-    ["cd" x] (tbl.push pwd x)
-    _ pwd))
-
-(fn read-ls [fs pwd [sz name]]
+(fn read-ls [fs pwd sz name]
   (var t fs)
   (each [_ v (ipairs pwd)]
     (when (not (. t v))
@@ -23,9 +16,12 @@
   (var pwd [])
   (each [_ line (ipairs lines)]
     (let [parts (str.split line)]
-      (if (= (. parts 1) "$")
-          (set pwd (read-cmd pwd parts))
-          (read-ls fs pwd parts))))
+      (match parts
+        ["$" "cd" "/"]   (set pwd [])
+        ["$" "cd" ".."]  (table.remove pwd (length pwd))
+        ["$" "cd" x]     (table.insert pwd x)
+        ["$" "ls"]       nil
+        [sz name]        (read-ls fs pwd sz name))))
   fs)
 
 (fn sizeof [d]
