@@ -43,7 +43,7 @@
 (fn solve-a [fs]
   (-> fs
       dirsizes
-      (tbl.filter (fn [x] (< x 100000)))
+      (tbl.filter #(<= $1 100000))
       tbl.sum))
 
 (local total 70000000)
@@ -55,7 +55,7 @@
   (let [mustfind (- needed (unused fs))]
     (-> fs
         dirsizes
-        (tbl.filter (fn [x] (>= x mustfind)))
+        (tbl.filter #(>= $1 mustfind))
         tbl.sorted
         (. 1))))
 
