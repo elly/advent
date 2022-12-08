@@ -20,10 +20,15 @@
   { :x (+ p0.x p1.x) :y (+ p0.y p1.y) })
 
 (fn toedge [m p d]
+  (var h (. m p.y p.x))
   (var r [])
   (var p (pt+ p d))
-  (while (in-bounds? m p)
-         (table.insert r (. m p.y p.x))
+  (var blocked false)
+  (while (and (in-bounds? m p) (not blocked))
+         (let [t (. m p.y p.x)]
+           (table.insert r (. m p.y p.x))
+           (when (>= t h)
+                 (set blocked true)))
          (set p (pt+ p d)))
   r)
 
@@ -57,10 +62,7 @@
 (fn solve-a [x] (nblocked x))
 
 (fn vdist [m p d]
-  (let [h (. m p.y p.x)
-        trees (toedge m p d)
-        e (tbl.indexf trees #(>= $1 h))]
-    (or e (length trees))))
+  (length (toedge m p d)))
 
 (fn viewscore [m p]
   (* (vdist m p UP)
