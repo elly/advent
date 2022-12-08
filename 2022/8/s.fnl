@@ -28,7 +28,7 @@
   (var blocked false)
   (while (and (in-bounds? m p) (not blocked))
          (let [t (. m p.y p.x)]
-           (table.insert r (. m p.y p.x))
+           (table.insert r t)
            (when (>= t h)
                  (set blocked true)))
          (set p (point+ p d)))
