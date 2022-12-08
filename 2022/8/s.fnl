@@ -16,20 +16,22 @@
        (<= p.y (length m))
        (<= p.x (length (. m 1)))))
 
-(fn pt+ [p0 p1]
+(fn point+ [p0 p1]
   { :x (+ p0.x p1.x) :y (+ p0.y p1.y) })
 
 (fn toedge [m p d]
+  "Returns the heights of the trees from p along direction d towards the
+   edge, stopping at the first tree at least as tall as p."
   (var h (. m p.y p.x))
   (var r [])
-  (var p (pt+ p d))
+  (var p (point+ p d))
   (var blocked false)
   (while (and (in-bounds? m p) (not blocked))
          (let [t (. m p.y p.x)]
            (table.insert r (. m p.y p.x))
            (when (>= t h)
                  (set blocked true)))
-         (set p (pt+ p d)))
+         (set p (point+ p d)))
   r)
 
 (fn blocked? [m p d]
@@ -54,12 +56,10 @@
       (table.insert r (f { : x : y }))))
   r)
 
-(fn nblocked [m]
+(fn solve-a [m]
   (-> m
       (flatmap #(if (blocked-all? m $1) 0 1))
       tbl.sum))
-
-(fn solve-a [x] (nblocked x))
 
 (fn vdist [m p d]
   (length (toedge m p d)))
@@ -70,15 +70,29 @@
      (vdist m p LEFT)
      (vdist m p RIGHT)))
 
-(fn bestviewscore [m]
+(fn solve-b [m]
   (-> m
       (flatmap #(viewscore m $1))
       (tbl.sorted #(> $1 $2))
       (. 1)))
 
-(fn solve-b [x] (bestviewscore x))
+(fn check []
+  (let [m [[3 0 3 7 3]
+           [2 5 5 1 2]
+           [6 5 3 3 2]
+           [3 3 5 4 9]
+           [3 5 3 9 0]]
+        p0 { :x 2 :y 2 }
+        p1 { :x 3 :y 4 }]
+    (assert (blocked? m p0 RIGHT))
+    (assert (blocked? m p0 DOWN))
+    (assert (not (blocked? m p0 UP)))
+    (assert (not (blocked? m p0 LEFT)))
 
-(fn check [])
+    (assert (= 2 (vdist m p1 UP)))
+    (assert (= 2 (vdist m p1 LEFT)))
+    (assert (= 1 (vdist m p1 DOWN)))
+    (assert (= 2 (vdist m p1 RIGHT)))))
 
 {
   : check
