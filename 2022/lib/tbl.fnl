@@ -28,7 +28,7 @@
 
 (fn find [t f]
   (var r nil)
-  (each [_ v (ipairs t)]
+  (each [_ v (ipairs t) &until r]
     (if (f v)
         (set r v)))
   r)
@@ -53,6 +53,13 @@
           (set crn 0))))
   (if (> crn 0)
       (table.insert r cr))
+  r)
+
+(fn indexf [t f]
+  (var r nil)
+  (each [k v (ipairs t) &until (not (= r nil))]
+    (if (f v)
+        (set r k)))
   r)
 
 (fn map [t f]
@@ -140,6 +147,7 @@
   : filter
   : fold
   : group
+  : indexf
   : map
   : maximize
   : maxval

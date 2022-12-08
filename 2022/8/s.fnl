@@ -19,18 +19,17 @@
 (fn pt+ [p0 p1]
   { :x (+ p0.x p1.x) :y (+ p0.y p1.y) })
 
-(fn mat [m p]
-  (. m p.y p.x))
+(fn toedge [m p d]
+  (var r [])
+  (var p (pt+ p d))
+  (while (in-bounds? m p)
+         (table.insert r (. m p.y p.x))
+         (set p (pt+ p d)))
+  r)
 
 (fn blocked? [m p d]
-  (var h (. m p.y p.x))
-  (var p (pt+ p d))
-  (var b false)
-  (while (in-bounds? m p)
-    (if (>= (mat m p) h)
-      (set b true))
-    (set p (pt+ p d)))
-  b)
+  (let [h (. m p.y p.x)]
+    (tbl.find (toedge m p d) #(<= h $1))))
 
 (local UP { :x 0 :y -1 })
 (local DOWN { :x 0 :y 1 })
@@ -43,29 +42,25 @@
        (blocked? m p LEFT)
        (blocked? m p RIGHT)))
 
-(fn nblocked [m]
-  (var r 0)
+(fn flatmap [m f]
+  (var r [])
   (for [y 1 (length m) 1]
-    (for [x 1 (length (. m y)) 1]
-      (let [p { : x : y }]
-        (when (not (blocked-all? m p))
-              (set r (+ r 1))))))
+    (for [x 1 (length (. m y))]
+      (table.insert r (f { : x : y }))))
   r)
+
+(fn nblocked [m]
+  (-> m
+      (flatmap #(if (blocked-all? m $1) 0 1))
+      tbl.sum))
 
 (fn solve-a [x] (nblocked x))
 
 (fn vdist [m p d]
-  (var r 0)
-  (var p p)
-  (var h (. m p.y p.x))
-  (var keep-going true)
-  (while (and (in-bounds? m p) keep-going)
-    (set p (pt+ p d))
-    (when (in-bounds? m p)
-          (set r (+ r 1))
-          (if (>= (. m p.y p.x) h)
-              (set keep-going false))))
-  r)
+  (let [h (. m p.y p.x)
+        trees (toedge m p d)
+        e (tbl.indexf trees #(>= $1 h))]
+    (or e (length trees))))
 
 (fn viewscore [m p]
   (* (vdist m p UP)
@@ -74,14 +69,10 @@
      (vdist m p RIGHT)))
 
 (fn bestviewscore [m]
-  (var b 0)
-  (for [y 2 (- (length m) 1) 1]
-    (for [x 2 (- (length (. m y)) 1) 1]
-      (let [p { : x : y }
-            s (viewscore m p)]
-        (when (> s b)
-              (set b s)))))
-  b)
+  (-> m
+      (flatmap #(viewscore m $1))
+      (tbl.sorted #(> $1 $2))
+      (. 1)))
 
 (fn solve-b [x] (bestviewscore x))
 
