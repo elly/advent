@@ -11,6 +11,12 @@
   (tset s x y z v)
   s))
 
+(fn all [s f]
+  (each [xk xv (pairs s)]
+    (each [yk yv (pairs xv)]
+      (each [zk zv (pairs yv)]
+        (f [xk yk zk] zv)))))
+
 (fn get [s p]
   (?. s (. p 1) (. p 2) (. p 3)))
 
@@ -31,6 +37,7 @@
 
 {
   : add
+  : all
   : check
   : get
   : make
