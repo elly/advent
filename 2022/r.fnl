@@ -29,6 +29,12 @@
     (print (fennel.view x))
     x))
 
+(global assert-eq
+  (fn [x y]
+    (when (not (= x y))
+          (print "Expected equality:" (fennel.view x) " vs " (fennel.view y))
+          (assert false))))
+
 (fn check-lib [name]
   (let [m (require (.. "lib/" name))]
     (m.check)))
@@ -69,6 +75,7 @@
       (let [p (read input)
             a (mod.solve-a p)
             b (mod.solve-b p)]
+        (when mod.debug (pretty p))
         (verify-output :a a (. output 1))
         (verify-output :b b (. output 2))))))
 
