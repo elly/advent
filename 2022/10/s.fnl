@@ -41,11 +41,12 @@
 (fn run [m]
   (while (not (done? m))
     (step m))
-  (tset m.xvals m.cycle m.x))
+  (tset m.xvals m.cycle m.x)
+  m.xvals)
 
-(fn make [code]
+(fn make-machine [code]
   {
-    : code
+    :code code
     :cycle 1
     :pc 1
     :x 1
@@ -53,12 +54,16 @@
     :xvals [1]
   })
 
+(fn signal-strengths [xvals]
+  (accumulate [sum 0
+               _ n (ipairs [20 60 100 140 180 220])]
+     (+ sum (* n (. xvals n)))))
+
 (fn solve-a [code]
-  (let [m (make code)]
-    (run m)
-    (accumulate [sum 0
-                 _ n (ipairs [20 60 100 140 180 220])]
-       (+ sum (* n (. m.xvals n))))))
+  (-> code
+      make-machine
+      run
+      signal-strengths))
 
 (fn raster-px [xvs x cycle]
   (let [v (. xvs cycle)]
@@ -78,10 +83,11 @@
     (print (table.concat line))))
 
 (fn solve-b [code]
-  (let [m (make code)]
-    (run m)
-    (raster m.xvals)
-    :FZBPBFZF))
+  (-> code
+      make-machine
+      run
+      raster)
+  :FZBPBFZF)
 
 (fn check []
   (let [code [[:noop] [:addx 3] [:addx -5]]
