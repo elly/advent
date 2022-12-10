@@ -29,11 +29,8 @@
     _         nil)
   (tset m :cycle (+ m.cycle 1)))
 
-(fn done? [m]
-  (> m.cycle (length m.code)))
-
 (fn run [m]
-  (while (not (done? m))
+  (while (<= m.cycle (length m.code))
     (step m))
   (tset m.xvals m.cycle m.x)
   m.xvals)
@@ -64,12 +61,11 @@
 
 (fn raster [xvs]
   (local WIDTH 40)
-  (for [y 1 6 1]
-    (var line [])
-    (for [x 1 WIDTH 1]
-      (let [cycle (+ (* (- y 1) WIDTH) x)]
-        (table.insert line (raster-px xvs (- x 1) cycle))))
-    (print (table.concat line))))
+  (for [y 0 5 1]
+    (print
+      (table.concat
+        (fcollect [x 1 WIDTH 1]
+          (raster-px xvs (- x 1) (+ (* y WIDTH) x)))))))
 
 (fn solve-b [code]
   (-> code
@@ -83,6 +79,7 @@
         m (make-machine code)]
     (run m)
     (assert (tbl.aeq [1 1 1 4 4 -1] m.xvals)))
+
   (assert-eq (raster-px [ 1 ] 0 1) "#")
   (assert-eq (raster-px [ 1 ] 1 1) "#")
   (assert-eq (raster-px [ 1 ] 2 1) "#"))
