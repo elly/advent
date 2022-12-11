@@ -68,6 +68,10 @@
     (tset r k (f v)))
   r)
 
+(fn mapkey [t k]
+  (icollect [_ v (pairs t)]
+    (. v k)))
+
 (fn maximize [t f]
   (var mv 0)
   (var mk nil)
@@ -153,6 +157,7 @@
   : group
   : indexf
   : map
+  : mapkey
   : maximize
   : maxval
   : pop
