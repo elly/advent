@@ -88,6 +88,10 @@
   (table.remove r (length r))
   r)
 
+(fn prod [t]
+  (accumulate [s 1 _ v (pairs t)]
+    (* s v)))
+
 (fn push [t v]
   (var r (acopy t))
   (table.insert r v)
@@ -152,6 +156,7 @@
   : maximize
   : maxval
   : pop
+  : prod
   : push
   : reverse
   : sorted
