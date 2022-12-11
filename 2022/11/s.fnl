@@ -99,7 +99,8 @@
 (fn solve-b [monkeys]
   ; My key insight for part 2: x % k = (x % (... * k)) % k, so you can constrain
   ; the growth of the worry levels by taking them modulo the product of all the
-  ; moduli every time they grow.
+  ; moduli every time they grow. My math nerd housemate informs me this is the
+  ; Chinese Remainder Theorem.
   (let [mod (-> monkeys (tbl.mapkey :mod) tbl.prod)]
     (-> monkeys
         copy-monkeys
