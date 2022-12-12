@@ -6,6 +6,45 @@
 
 (fn ord [c] (string.byte c 1))
 
+(fn pointkey [[x y]]
+  (.. x "," y))
+
+(fn neighbors [m p]
+  (fn point+ [[p0x p0y] [p1x p1y]]
+    [(+ p0x p1x) (+ p0y p1y)])
+
+  (fn map-ref [m p]
+    (. m :map (. p 2) (. p 1)))
+
+  (fn in-bounds? [m [x y]]
+    (and (> y 0) (<= y (length m.map))
+         (> x 0) (<= x (length (. m.map 1)))))
+
+  (fn can-climb? [m p0 p1]
+    (let [d (- (map-ref m p1) (map-ref m p0))]
+      (>= d -1)))
+
+  (fn can-go? [p1]
+    (and (in-bounds? m p1) (can-climb? m p p1)))
+
+  (tbl.filter
+    (tbl.map const.dirmods #(point+ p $1))
+    can-go?))
+
+(fn add-bfs! [m]
+  (var q [m.end])
+  (var visited { (pointkey m.end) true })
+  (var parents {})
+  (while (> (length q) 0)
+    (let [v (table.remove q 1)]
+      (each [_ w (ipairs (neighbors m v))]
+        (when (not (. visited (pointkey w)))
+              (tset visited (pointkey w) true)
+              (tset parents (pointkey w) (pointkey v))
+              (table.insert q w)))))
+  (tset m :parents parents)
+  m)
+
 (fn read [lines]
   (fn readline [line]
     (-> line
@@ -31,59 +70,21 @@
 
   (-> lines
       (tbl.map readline)
-      build-map!))
+      build-map!
+      add-bfs!))
 
-(fn point+ [[p0x p0y] [p1x p1y]]
-  [(+ p0x p1x) (+ p0y p1y)])
-
-(fn pointkey [[x y]]
-  (.. x "," y))
-
-(fn map-ref [m p]
-  (. m :map (. p 2) (. p 1)))
-
-(fn neighbors [m p]
-  (fn in-bounds? [m [x y]]
-    (and (> y 0) (<= y (length m.map))
-         (> x 0) (<= x (length (. m.map 1)))))
-
-  (fn can-climb? [m p0 p1]
-    (let [d (- (map-ref m p1) (map-ref m p0))]
-      (>= d -1)))
-
-  (fn can-go? [p1]
-    (and (in-bounds? m p1) (can-climb? m p p1)))
-
-  (tbl.filter
-    (tbl.map const.dirmods #(point+ p $1))
-    can-go?))
-
-(fn bfs [m]
-  (var q [m.end])
-  (var visited { (pointkey m.end) true })
-  (var parents {})
-  (while (> (length q) 0)
-    (let [v (table.remove q 1)]
-      (each [_ w (ipairs (neighbors m v))]
-        (when (not (. visited (pointkey w)))
-              (tset visited (pointkey w) true)
-              (tset parents (pointkey w) (pointkey v))
-              (table.insert q w)))))
-  parents)
-
-(fn bestpath [m parents b]
+(fn bestpath [m b]
   (var p [])
   (var c (pointkey b))
   (var s (pointkey m.end))
   (while (not (= s c))
          (table.insert p c)
-         (set c (. parents c))
+         (set c (. m.parents c))
          (assert c))
   p)
 
 (fn solve-a [m]
-  (let [b (bfs m)]
-    (length (bestpath m b m.begin))))
+  (length (bestpath m m.begin)))
 
 (fn all-as [m]
   (var r [])
@@ -94,15 +95,14 @@
   r)
 
 (fn solve-b [m]
-  (let [b (bfs m)]
-    (fn path-score [a]
-      (assert (= (type a) :table))
-      (length (bestpath m b a)))
-    (-> m
-        all-as
-        (tbl.filter #(. b (pointkey $1)))
-        (tbl.maxval #(- 1000 (path-score $1)))
-        path-score)))
+  (fn path-score [a]
+    (assert (= (type a) :table))
+    (length (bestpath m a)))
+  (-> m
+      all-as
+      (tbl.filter #(. m.parents (pointkey $1)))
+      (tbl.maxval #(- 1000 (path-score $1)))
+      path-score))
 
 {
   : read
