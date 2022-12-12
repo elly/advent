@@ -49,7 +49,7 @@
 
   (fn can-climb? [m p0 p1]
     (let [d (- (map-ref m p1) (map-ref m p0))]
-      (<= d 1)))
+      (>= d -1)))
 
   (fn can-go? [p1]
     (and (in-bounds? m p1) (can-climb? m p p1)))
@@ -58,9 +58,9 @@
     (tbl.map const.dirmods #(point+ p $1))
     can-go?))
 
-(fn bfs [m begin]
-  (var q [begin])
-  (var visited { (pointkey begin) true })
+(fn bfs [m]
+  (var q [m.end])
+  (var visited { (pointkey m.end) true })
   (var parents {})
   (while (> (length q) 0)
     (let [v (table.remove q 1)]
@@ -73,15 +73,16 @@
 
 (fn bestpath [m parents b]
   (var p [])
-  (var c (pointkey m.end))
-  (var s (pointkey b))
-  (while (and c (not (= s c)))
+  (var c (pointkey b))
+  (var s (pointkey m.end))
+  (while (not (= s c))
          (table.insert p c)
-         (set c (. parents c)))
-  (if c p nil))
+         (set c (. parents c))
+         (assert c))
+  p)
 
 (fn solve-a [m]
-  (let [b (bfs m m.begin)]
+  (let [b (bfs m)]
     (length (bestpath m b m.begin))))
 
 (fn all-as [m]
@@ -93,16 +94,15 @@
   r)
 
 (fn solve-b [m]
-  (fn path-score [a]
-    (assert (= (type a) :table))
-    (let [b (bfs m a)
-          p (bestpath m b a)]
-      (if p (length p) 9999999)))
-  (-> m
-      all-as
-      (tbl.filter #(= (type $1) :table))
-      (tbl.maxval #(- 1000 (path-score $1)))
-      path-score))
+  (let [b (bfs m)]
+    (fn path-score [a]
+      (assert (= (type a) :table))
+      (length (bestpath m b a)))
+    (-> m
+        all-as
+        (tbl.filter #(. b (pointkey $1)))
+        (tbl.maxval #(- 1000 (path-score $1)))
+        path-score)))
 
 {
   : read
