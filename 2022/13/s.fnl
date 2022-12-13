@@ -25,8 +25,9 @@
         (eat "]")
         (values r in))
       (let [(start end) (string.find in "%d+")]
-        (values (tonumber (string.sub in start end))
-                (string.sub in (+ end 1))))))
+        (values
+          (tonumber (string.sub in start end))
+          (string.sub in (+ end 1))))))
 
 (fn readval [line]
   (pick-values 1 (readval-inner line)))
