@@ -113,13 +113,13 @@
   r)
 
 (fn splitby [t f]
-  (var r {})
-  (var c {})
-  (each [_ v (pairs t)]
+  (var r [])
+  (var c [])
+  (each [_ v (ipairs t)]
     (if (f v)
         (do
           (table.insert r c)
-          (set c {}))
+          (set c []))
         (table.insert c v)))
   (if (> (# c) 0)
       (table.insert r c))
