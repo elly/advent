@@ -62,6 +62,15 @@
             (set n (+ n 1))))
     n))
 
+; Some part b notes;
+; The areas of the sensors can't overlap because if they did they'd detect the
+; same beacon - at most they can overlap at a single point. Also I can cheaply
+; detect whether this happens, and it does happen a lot in the real input.
+;
+; Also, as a note to self, I hacked up a fast C solution using my original
+; algorithm here, and it probably won't work - it takes around 37ms per row to
+; scan, which makes the whole problem take around 41 hours. So, no dice there,
+; and back to the thinking board.
 (fn solve-b [sensors]
   (for [x 0 20 1]
     (for [y 0 20 1]
