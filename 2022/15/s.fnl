@@ -49,9 +49,6 @@
 (fn is-test-input? [sensors]
   (= (. sensors 1 1) 2))
 
-(fn check []
-  (assert (not (could-be-here? [[2 0 2 10 10]] 2 10))))
-
 (fn solve-a [sensors]
   (let [(xl xh) (x-bounds sensors)
         y (if (is-test-input? sensors) 10 2000000)]
@@ -62,6 +59,39 @@
             (set n (+ n 1))))
     n))
 
+(fn perimeter [sensor]
+  (local sx (. sensor 1))
+  (local sy (. sensor 2))
+  (local r (+ (. sensor 5) 1))
+  (var px sx)
+  (var py (+ sy r))
+  (var dx 1)
+  (var dy -1)
+  (fn []
+    (let [x px y py]
+      (set px (+ px dx))
+      (set py (+ py dy))
+      (if
+        (and (= px (+ sx r))
+             (= py sy))
+          (do (set dx -1) (set dy -1))
+        (and (= px sx)
+             (= py (- sy r)))
+          (do (set dx -1) (set dy 1))
+        (and (= px (- sx r))
+             (= py sy))
+          (do (set dx 1) (set dy 1)))
+      (if (and (= x sx) (= y (+ sy r)) (= dy 1))
+          nil
+          (values x y)))))
+
+(fn check []
+  (assert (not (could-be-here? [[2 0 2 10 10]] 2 10)))
+  (let [p (icollect [x y (perimeter [0 0 3 0 3])] [x y])]
+    (assert (= (# p) 16))
+    (each [_ c (ipairs p)]
+      (assert (= (manhattan 0 0 (. c 1) (. c 2)) 4)))))
+
 ; Some part b notes;
 ; The areas of the sensors can't overlap because if they did they'd detect the
 ; same beacon - at most they can overlap at a single point. Also I can cheaply
@@ -71,12 +101,23 @@
 ; algorithm here, and it probably won't work - it takes around 37ms per row to
 ; scan, which makes the whole problem take around 41 hours. So, no dice there,
 ; and back to the thinking board.
+;
+; After a trip to the thinking board I have an idea: candidate points can only
+; lie along the perimeters of sensor areas. Woo!
 (fn solve-b [sensors]
-  (for [x 0 20 1]
-    (for [y 0 20 1]
-      (when (could-be-here? sensors x y)
-            (pretty [x y]))))
-  0)
+  (fn in-bounds? [x y]
+    (if (is-test-input? sensors)
+        (and (>= x 0) (<= x 20) (>= y 0) (<= y 20))
+        (and (>= x 0) (<= x 4000000) (>= y 0) (<= y 4000000))))
+  (fn frequency [[x y]]
+    (+ (* x 4000000) y))
+  (var found nil)
+  (each [_ s (ipairs sensors) &until found]
+    (each [x y (perimeter s) &until found]
+      (when (and (in-bounds? x y)
+                 (could-be-here? sensors x y))
+            (set found [x y]))))
+  (frequency found))
 
 {
 ;  :debug 1
