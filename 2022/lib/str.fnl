@@ -4,7 +4,7 @@
   (icollect [v (s:gmatch m)] v))
 
 (fn allnums [s]
-  (icollect [v (s:gmatch "%d+")] (tonumber v)))
+  (icollect [v (s:gmatch "-?%d+")] (tonumber v)))
 
 (fn chars [s]
   (s:gmatch "."))
