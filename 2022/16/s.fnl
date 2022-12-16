@@ -80,15 +80,18 @@
   (+ value (* steps flow)))
 
 ; This approach does work for part A, and doesn't take that long. Yay!
-(fn best-path [g where steps dists keys opened]
-  (local dists (or dists (floyd-warshall g)))
-  (local keys (or keys (nonzero-nodes g)))
+(fn best-path [g where steps lens opened]
+  (local lens
+    (or lens
+      { :dists (floyd-warshall g)
+        :vkeys (nonzero-nodes g)
+        :keys (nodes g) }))
   (local opened (or opened {}))
 
   (fn candidates []
-    (icollect [_ k (ipairs keys)]
+    (icollect [_ k (ipairs lens.vkeys)]
       (when (and (not (. opened k))
-                 (< (. dists where k) steps))
+                 (< (. lens :dists where k) steps))
             k)))
 
   (fn add-opened [n]
@@ -99,9 +102,9 @@
   (var best-value 0)
   (var best-rest [])
   (each [_ c (ipairs (candidates))]
-    (let [new-steps (- steps (. dists where c) 1)
+    (let [new-steps (- steps (. lens :dists where c) 1)
           new-opened (add-opened c)
-          (v p) (best-path g c new-steps dists keys new-opened)]
+          (v p) (best-path g c new-steps lens new-opened)]
       (when (> v best-value)
         (set best-value v)
         (set best-rest p))))
