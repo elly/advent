@@ -12,14 +12,20 @@
         :outs (tbl.drop places 1)
         :flow (tonumber flow)
       }))
+
+  (var r {})
   (let [rooms (tbl.map lines read-line)]
-    (var r {})
     (each [_ v (ipairs rooms)]
       (tset r v.name v))
     r))
 
 (fn nodes [g]
   (tbl.sorted (icollect [k _ (pairs g)] k)))
+
+(fn nonzero-nodes [g]
+  (-> (icollect [k _ (pairs g)] k)
+      (tbl.filter #(> (. g $1 :flow) 0))
+      tbl.sorted))
 
 (fn floyd-warshall [g]
   (var dists {})
@@ -54,31 +60,60 @@
 ; We might need to do backtracking search instead of some sort, but I'm afraid
 ; of how big the search space is: there are 15! permutations of the nonzero
 ; flow nodes in my input, which is a Lot. I might still need some heuristics.
-(fn greedy [g]
-  (local dists (floyd-warshall g))
-  (local keys (nodes g))
+;
+; Although... the actual distances are large sometimes, so many of the paths
+; are excluded. I wonder if we can do dfs, stopping when we run out of steps,
+; and hunt for a max that way?
 
-  (var closed-valves {})
-  (var steps-left 30)
+(fn value-of-path [g d p]
+  (var steps 30)
+  (var value 0)
+  (var flow 0)
   (var where :AA)
+
+  (each [_ e (ipairs p) &until (<= steps 0)]
+    (let [used (+ 1 (. d where e))]
+      (set steps (- steps used))
+      (set value (+ value (* flow used)))
+      (set flow (+ flow (. g e :flow)))
+      (set where e)))
+  (+ value (* steps flow)))
+
+(fn best-path [g dists keys where steps opened]
+  (local dists (or dists (floyd-warshall g)))
+  (local keys (or keys (nonzero-nodes g)))
+  (local where (or where :AA))
+  (local steps (or steps 30))
+  (local opened (or opened {}))
 
   (fn candidates []
     (icollect [_ k (ipairs keys)]
-      (when (and (> (. g k :flow) 0)
-                 (not (. closed-valves k)))
+      (when (and (not (. opened k))
+                 (< (. dists where k) steps))
             k)))
 
-  (fn total-future-flow [k]
-    (* (. g k :flow)
-       (- steps-left (. dists where k) 1)))
+  (fn add-opened [n]
+    (var copy (collect [k _ (pairs opened)] (values k true)))
+    (tset copy n true)
+    copy)
 
-  (fn best-candidate []
-    (tbl.maxval (candidates) total-future-flow))
+  (var best-value 0)
+  (var best-rest [])
+  (each [_ c (ipairs (candidates))]
+    (let [new-steps (- steps (. dists where c) 1)
+          new-opened (add-opened c)
+          (v p) (best-path g dists keys c new-steps new-opened)]
+      (when (> v best-value)
+        (set best-value v)
+        (set best-rest p))))
 
-  (pretty dists)
-  (pretty (best-candidate)))
+  (set best-value (+ best-value (* (. g where :flow) steps)))
+  (table.insert best-rest 1 where)
 
-(fn solve-a [x] (greedy x) 0)
+  ;(pretty [best-value best-rest])
+  (values best-value best-rest))
+
+(fn solve-a [x] (best-path x))
 (fn solve-b [x] 0)
 
 {
