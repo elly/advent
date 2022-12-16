@@ -79,11 +79,10 @@
       (set where e)))
   (+ value (* steps flow)))
 
-(fn best-path [g dists keys where steps opened]
+; This approach does work for part A, and doesn't take that long. Yay!
+(fn best-path [g where steps dists keys opened]
   (local dists (or dists (floyd-warshall g)))
   (local keys (or keys (nonzero-nodes g)))
-  (local where (or where :AA))
-  (local steps (or steps 30))
   (local opened (or opened {}))
 
   (fn candidates []
@@ -102,7 +101,7 @@
   (each [_ c (ipairs (candidates))]
     (let [new-steps (- steps (. dists where c) 1)
           new-opened (add-opened c)
-          (v p) (best-path g dists keys c new-steps new-opened)]
+          (v p) (best-path g c new-steps dists keys new-opened)]
       (when (> v best-value)
         (set best-value v)
         (set best-rest p))))
@@ -113,7 +112,13 @@
   ;(pretty [best-value best-rest])
   (values best-value best-rest))
 
-(fn solve-a [x] (best-path x))
+; Part B requires searching a larger space. In particular, we have two
+; positions instead of one, and our candidate set is way bigger: we might
+; move one of the positions to a room with no flow so we can move the other
+; to one with a flow. A candidate is now any movef where *at least one* of
+; the positions moves to a room with an unopened valve and nonzero flow. Hm.
+
+(fn solve-a [x] (best-path x :AA 30))
 (fn solve-b [x] 0)
 
 {
