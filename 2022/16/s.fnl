@@ -80,7 +80,7 @@
   (+ value (* steps flow)))
 
 ; This approach does work for part A, and doesn't take that long. Yay!
-(fn best-path [g where steps lens opened]
+(fn best-path-a [g where steps lens opened]
   (local lens
     (or lens
       {
@@ -106,7 +106,7 @@
   (each [_ c (ipairs (candidates))]
     (let [new-steps (- steps (. lens :dists where c) 1)
           new-opened (add-opened c)
-          (v p) (best-path g c new-steps lens new-opened)]
+          (v p) (best-path-a g c new-steps lens new-opened)]
       (when (> v best-value)
         (set best-value v)
         (set best-rest p))))
@@ -117,13 +117,22 @@
   ;(pretty [best-value best-rest])
   (values best-value best-rest))
 
-; Part B requires searching a larger space. In particular, we have two
-; positions instead of one, and our candidate set is way bigger: we might
-; move one of the positions to a room with no flow so we can move the other
-; to one with a flow. A candidate is now any movef where *at least one* of
-; the positions moves to a room with an unopened valve and nonzero flow. Hm.
+; A bit of a green-field approach for part B. The path elements are now
+; pairs (p,q) of places where the two pawns move, and the pawns don't
+; necessarily open when they move. That causes a huge explosion in the state
+; space, because when p moves (taking s steps), we consider *every* node within
+; s steps of q, and vice versa. That's obviously going to be too big to be
+; workable.
+;
+; To keep the state space down, let's do this: when we're considering moving p,
+; we should only consider moves of q that would take it towards a goal node,
+; and we should only consider moves that take it as far as possible towards
+; that goal. That means that if we're moving p 4 spaces and q has a goal node
+; 5 spaces away, we would *only* consider moving q to that node 4 spaces closer
+; to the goal. We would have to figure out what that node is, but maybe we can
+; Floyd-Warshall that too...
 
-(fn solve-a [x] (best-path x :AA 30))
+(fn solve-a [x] (best-path-a x :AA 30))
 (fn solve-b [x] 0)
 
 {
