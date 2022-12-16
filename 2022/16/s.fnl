@@ -16,7 +16,8 @@
   (var r {})
   (let [rooms (tbl.map lines read-line)]
     (each [_ v (ipairs rooms)]
-      (tset r v.name v))
+      (tset r v.name v)
+      (tset v :name nil))
     r))
 
 (fn nodes [g]
@@ -29,23 +30,36 @@
 
 (fn floyd-warshall [g]
   (var dists {})
+  (var nexts {})
   (local keys (nodes g))
 
-  (each [_ v (pairs g)]
-    (tset dists v.name {})
+  (each [vn v (pairs g)]
+    (tset dists vn {})
+    (tset nexts vn {})
     (each [_ k (ipairs keys)]
-      (tset dists v.name k 99999999))
+      (tset dists vn k 99999999))
     (each [_ e (ipairs v.outs)]
-      (tset dists v.name e 1))
-    (tset dists v.name v.name 0))
+      (tset dists vn e 1)
+      (tset nexts vn e e))
+    (tset dists vn vn 0)
+    (tset nexts vn vn 0))
 
   (each [_ k (ipairs keys)]
     (each [_ i (ipairs keys)]
       (each [_ j (ipairs keys)]
         (when (> (. dists i j) (+ (. dists i k) (. dists k j)))
-              (tset dists i j ( + (. dists i k) (. dists k j)))))))
+              (tset dists i j ( + (. dists i k) (. dists k j)))
+              (tset nexts i j (. nexts i k))))))
 
-  dists)
+  (values dists nexts))
+
+(fn fw-path [nexts s e]
+  (var p [s])
+  (var n s)
+  (while (not (= n e))
+    (set n (. nexts n e))
+    (table.insert p n))
+  p)
 
 ; The greedy algorithm looks like this: always choose the node with the largest
 ; remaining time after reaching * flow rate. To do that, we need the distance
@@ -117,6 +131,9 @@
   ;(pretty [best-value best-rest])
   (values best-value best-rest))
 
+;(fn solve-a [x] (best-path-a x :AA 30))
+(fn solve-a [x] 0)
+
 ; A bit of a green-field approach for part B. The path elements are now
 ; pairs (p,q) of places where the two pawns move, and the pawns don't
 ; necessarily open when they move. That causes a huge explosion in the state
@@ -132,10 +149,68 @@
 ; to the goal. We would have to figure out what that node is, but maybe we can
 ; Floyd-Warshall that too...
 
-(fn solve-a [x] (best-path-a x :AA 30))
-(fn solve-b [x] 0)
+(fn check []
+  (let [g { :AA { :flow 0 :outs [ :BB :CC ] }
+            :BB { :flow 1 :outs [ :AA :DD ] }
+            :CC { :flow 2 :outs [ :AA :EE ] }
+            :DD { :flow 1 :outs [ :BB ] }
+            :EE { :flow 0 :outs [ :CC ] }}
+        (ds ps) (floyd-warshall g)]
+    (assert-eq 2 (. ds :AA :DD))
+    (assert-eq 4 (. ds :DD :EE))
+    (assert (tbl.aeq [:EE :CC :AA :BB :DD] (fw-path ps :EE :DD)))))
+
+(fn best-path-b [g wp wq steps lens opened]
+  (local lens
+    (or lens
+      (let [(ds ns) (floyd-warshall g)]
+        {
+          :dists ds
+          :nexts ns
+          :vkeys (nonzero-nodes g)
+        })))
+  (local opened (or opened {}))
+
+  (fn candidates-from [w]
+    (icollect [_ k (ipairs lens.vkeys)]
+      (when (and (not (. opened k))
+                 (< (. lens.dists w k) steps))
+        [(. lens.dists w k) k])))
+
+  (fn move-towards [from to s]
+    (var p from)
+    (for [i 1 s 1 &until (= p to)]
+      (set p (. lens.nexts p to)))
+    p)
+
+  (fn other-candidates-for [s o w]
+    "Given a proposed move of the other pawn, find candidate moves for
+     this pawn. This accounts for changes to the opened set, and returns only
+     moves that take at most as much time as m."
+    (var cs {})
+    (each [_ k (ipairs lens.vkeys)]
+      (when (and (not (. opened k))
+                 (not (= o k)))
+        (tset cs (move-towards w k s) true)))
+    (icollect [k _ (pairs cs)] k))
+
+  (fn candidates []
+    (var r [])
+    (each [_ [s mp] (ipairs (candidates-from wp))]
+      (each [_ mq (ipairs (other-candidates-for s mp wq))]
+        (table.insert r [s mp mq])))
+    (each [_ [s mq] (ipairs (candidates-from wq))]
+      (each [_ mp (ipairs (other-candidates-for s mq wp))]
+        (table.insert r [s mp mq])))
+    r)
+
+  (pretty (# (candidates)))
+  (values 0 []))
+
+(fn solve-b [g] (best-path-b g :AA :AA 26))
 
 {
+  : check
   : read
   : solve-a
   : solve-b
