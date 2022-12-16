@@ -83,9 +83,11 @@
 (fn best-path [g where steps lens opened]
   (local lens
     (or lens
-      { :dists (floyd-warshall g)
+      {
+        :dists (floyd-warshall g)
         :vkeys (nonzero-nodes g)
-        :keys (nodes g) }))
+        :keys (nodes g)
+      }))
   (local opened (or opened {}))
 
   (fn candidates []
