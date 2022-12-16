@@ -131,8 +131,7 @@
   ;(pretty [best-value best-rest])
   (values best-value best-rest))
 
-;(fn solve-a [x] (best-path-a x :AA 30))
-(fn solve-a [x] 0)
+(fn solve-a [x] (best-path-a x :AA 30))
 
 ; A bit of a green-field approach for part B. The path elements are now
 ; pairs (p,q) of places where the two pawns move, and the pawns don't
@@ -160,6 +159,13 @@
     (assert-eq 4 (. ds :DD :EE))
     (assert (tbl.aeq [:EE :CC :AA :BB :DD] (fw-path ps :EE :DD)))))
 
+; This absolutely should not work, and on the test input it does not work. I
+; can't really believe it produces the right answer on the production input.
+; All we do is, we run the algorithm from part A once, then *delete those
+; nodes' values*, then run the algorithm again. The only way this can work is
+; if the second pawn would never open something earlier than the first pawn.
+;
+; I have no idea.
 (fn best-path-b [g wp wq steps lens opened]
   (local lens
     (or lens
@@ -171,41 +177,11 @@
         })))
   (local opened (or opened {}))
 
-  (fn candidates-from [w]
-    (icollect [_ k (ipairs lens.vkeys)]
-      (when (and (not (. opened k))
-                 (< (. lens.dists w k) steps))
-        [(. lens.dists w k) k])))
-
-  (fn move-towards [from to s]
-    (var p from)
-    (for [i 1 s 1 &until (= p to)]
-      (set p (. lens.nexts p to)))
-    p)
-
-  (fn other-candidates-for [s o w]
-    "Given a proposed move of the other pawn, find candidate moves for
-     this pawn. This accounts for changes to the opened set, and returns only
-     moves that take at most as much time as m."
-    (var cs {})
-    (each [_ k (ipairs lens.vkeys)]
-      (when (and (not (. opened k))
-                 (not (= o k)))
-        (tset cs (move-towards w k s) true)))
-    (icollect [k _ (pairs cs)] k))
-
-  (fn candidates []
-    (var r [])
-    (each [_ [s mp] (ipairs (candidates-from wp))]
-      (each [_ mq (ipairs (other-candidates-for s mp wq))]
-        (table.insert r [s mp mq])))
-    (each [_ [s mq] (ipairs (candidates-from wq))]
-      (each [_ mp (ipairs (other-candidates-for s mq wp))]
-        (table.insert r [s mp mq])))
-    r)
-
-  (pretty (# (candidates)))
-  (values 0 []))
+  (let [(v0 p0) (best-path-a g wp steps lens opened)]
+    (each [_ k (ipairs p0)]
+      (tset g k :flow 0))
+    (let [(v1 p1) (best-path-a g wq steps lens opened)]
+      (+ v0 v1))))
 
 (fn solve-b [g] (best-path-b g :AA :AA 26))
 
