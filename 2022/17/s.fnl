@@ -150,7 +150,7 @@
 
   (fn has-period? [pre per]
     (var good true)
-    (for [i 1 50 1]
+    (for [i 1 30 1]
       (when (not (= (. jsi (+ pre i)) (. jsi (+ pre per i))))
             (set good false)))
     good)
@@ -163,25 +163,18 @@
   (values found-preamble found-period))
 
 (fn solve-b [jets]
-  (var jet-stream (cyclic-stream jets))
-  (var rock-stream (cyclic-stream *rocks*))
-  (var m (make-empty-map 7))
-  (var rocks 1000000000000)
-  (var preamble 849)
-  (drop-n m jet-stream rock-stream preamble)
-  (var preamble-height m.top)
-  (var period 1720)
-  (var lt 0)
-  (var height-per-period 2729)
-  (var full-periods (math.floor (/ (- rocks preamble) period)))
-  (var remnant (% (- rocks preamble) period))
-  (pretty [full-periods remnant])
-  (drop-n m jet-stream rock-stream period)
-  (set lt m.top)
-  (drop-n m jet-stream rock-stream remnant)
-  (var remnant-height (- m.top lt))
-  (print (+ preamble-height (* full-periods height-per-period) remnant-height))
-  0)
+  (fn height-after [n]
+    (var m (make-empty-map 7))
+    (drop-n m (cyclic-stream jets) (cyclic-stream *rocks*) n)
+    m.top)
+  (let [nrocks 1000000000000
+        (e p) (find-period jets)
+        r     (% (- nrocks e) p)
+        eh    (height-after (+ e p))
+        ph    (- (height-after (+ e p p)) eh)
+        rh    (- (height-after (+ e p p r)) (+ eh ph))
+        fp    (math.floor (/ (- nrocks (+ e p)) p))]
+    (+ eh (* fp ph) rh)))
 
 
 ; For part b: for the state to recur, we need:
