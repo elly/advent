@@ -34,10 +34,12 @@
 
 (fn cyclic-stream [list]
   (var i 1)
-  (fn []
-    (let [r (. list i)]
-      (set i (+ (% i (# list)) 1))
-      r)))
+  (fn [z]
+    (if z
+        i
+       (let [r (. list i)]
+         (set i (+ (% i (# list)) 1))
+         r))))
 
 (fn raster [map]
   (for [y 20 0 -1]
@@ -134,28 +136,53 @@
     (drop-n m (cyclic-stream jets) (cyclic-stream *rocks*) 2022)
     m.top))
 
-(fn top-n-rows [m z]
-  (var r [])
-  (for [y m.top (- m.top z) -1]
-    (for [x 0 (- m.width 1) 1]
-      (table.insert r (if (points.get m [x y 0]) "#" "."))))
-  (table.concat r))
-
-(fn solve-b [jets]
-  (var lt 0)
-  (var ps [])
+(fn find-period [jets]
   (var jet-stream (cyclic-stream jets))
   (var rock-stream (cyclic-stream *rocks*))
   (var m (make-empty-map 7))
-  (var rs {})
-  (for [i 1 50 1]
-    (drop-n m jet-stream rock-stream (* (# jets) (# *rocks*)))
-    (let [r (top-n-rows m 15)]
-      (print r)
-      (when (. rs r)
-          (print (.. "!! " (. rs r) " " i)))
-      (tset rs r i)))
+  (var jsi [])
+  (for [i 1 10000 1]
+    (drop-n m jet-stream rock-stream 1)
+    (table.insert jsi (jet-stream true)))
+
+  (var found-preamble nil)
+  (var found-period nil)
+
+  (fn has-period? [pre per]
+    (var good true)
+    (for [i 1 50 1]
+      (when (not (= (. jsi (+ pre i)) (. jsi (+ pre per i))))
+            (set good false)))
+    good)
+
+  (for [preamble 0 (# jets) 1 &until found-preamble]
+    (for [period-length 1 (# jets) 1 &until found-preamble]
+      (when (has-period? preamble period-length)
+            (set found-preamble preamble)
+            (set found-period period-length))))
+  (values found-preamble found-period))
+
+(fn solve-b [jets]
+  (var jet-stream (cyclic-stream jets))
+  (var rock-stream (cyclic-stream *rocks*))
+  (var m (make-empty-map 7))
+  (var rocks 1000000000000)
+  (var preamble 849)
+  (drop-n m jet-stream rock-stream preamble)
+  (var preamble-height m.top)
+  (var period 1720)
+  (var lt 0)
+  (var height-per-period 2729)
+  (var full-periods (math.floor (/ (- rocks preamble) period)))
+  (var remnant (% (- rocks preamble) period))
+  (pretty [full-periods remnant])
+  (drop-n m jet-stream rock-stream period)
+  (set lt m.top)
+  (drop-n m jet-stream rock-stream remnant)
+  (var remnant-height (- m.top lt))
+  (print (+ preamble-height (* full-periods height-per-period) remnant-height))
   0)
+
 
 ; For part b: for the state to recur, we need:
 ; 1. The same stream of rocks
@@ -182,6 +209,21 @@
 ; windows for an actual recurrence. Even using top *10* rows, there's a
 ; recurrence between 23 and 18, but there's none between 28 and 23, so that
 ; won't work either.
+;
+; Could I do direct simulation? if I try dropping #jets * #rocks * 10 rocks,
+; that takes 12 seconds, so a direct sim (if I figured out how to compact the
+; map) would take 12 million seconds (ish), which is way too long.
+
+; 5 9 14 21 25 29 33 38 4 13 17 21 26 39
+; 3 7 11 15 19 29 33 38 2 11 16 20 24 29 35 6 12 17 21 25 35 39 4 10 16 22 26 31 37 3 11 15 19 24 37
+; 3 7 11 15 19 29 33 38 2 11 16 20 24 29 35 6 12 17 21 25 35 39 4 10 16 22 26 31 37 3 11 15 19 24 37
+; 3 7 11 15 19 29 33 38 2 11 16 20 24 29 35 6 12 17 21 25 35 39 4 10 16 22 26 31 37 3 11 15 19 24 37
+; 3 7 11 15 19 29 33 38 2 11 16 20 24 29 35 6 12 17 21 25 35 39 4 10 16 22 26 31 37 3 11 15 19 24 37
+; 3 7 11 15 19 29 33 38 2 11 16 20 24 29 35 6 12 17 21 25 35 39 4 10 16 22 26 31 37 3 11 15 19 24 37
+; 3 7 11 15 19 29 33 38 2 11 16 20 24 29 35 6 12 17 21 25 35 39 4 10 16 22 26 31 37 3 11 15 19 24 37
+; 3 7 11 15 19 29 33 38 2 11 16 20 24 29 35 6 12 17 21 25 35 39 4 10 16 22 26 31 37 3 11 15 19 24 37
+; 3 7 11 15 19 29 33 38 2 11 16 20 24 29 35 6 12 17 21 25 35 39 4 10 16 22 26 31 37 3 11 15 19 24 37
+; 3 7 11 15 19 29
 
 {
   : check
