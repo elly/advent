@@ -46,6 +46,16 @@
         (fcollect [x 0 (- map.width 1) 1]
           (if (points.get map [x y 0]) "#" "."))))))
 
+(fn add-rock-to-map [map rock rx ry]
+  (for [i 1 (# rock.points) 2]
+    (points.add map
+      [(+ rx (. rock.points i))
+       (+ ry (. rock.points (+ i 1)))
+       0]
+      true))
+  (when (< map.top (+ ry rock.size.y))
+        (set map.top (+ ry rock.size.y))))
+
 (fn drop [map jets rock]
   (var rx 2)
   (var ry (+ map.top 3))
@@ -75,26 +85,16 @@
         true)
       false))
 
-  (fn add-rock-to-map []
-    (for [i 1 (# rock.points) 2]
-      (points.add map
-        [(+ rx (. rock.points i))
-         (+ ry (. rock.points (+ i 1)))
-         0]
-        true))
-    (when (< map.top (+ ry rock.size.y))
-          (set map.top (+ ry rock.size.y))))
-
   (push (jets))
   (while (fall)
     (push (jets)))
-  (add-rock-to-map))
+  (values rx ry))
 
-(fn drop-n [map jetlist rocklist n]
-  (var jet-stream (cyclic-stream jetlist))
-  (var rock-stream (cyclic-stream rocklist))
+(fn drop-n [map jet-stream rock-stream n]
   (for [i 1 n 1]
-    (drop map jet-stream (rock-stream)))
+    (let [rock (rock-stream)
+          (rx ry) (drop map jet-stream rock)]
+      (add-rock-to-map map rock rx ry)))
   map)
 
 (fn make-empty-map [width]
@@ -110,28 +110,78 @@
   (var r1x1 { :points [0 0] :size { :x 1 :y 1 } })
   (var r1x2 { :points [0 0 0 1] :size { :x 1 :y 2 } })
   (var r2x1 { :points [0 0 1 0] :size { :x 2 :y 1 } })
+  (fn drn [m js rs n]
+    (drop-n m (cyclic-stream js) (cyclic-stream rs) n))
   (let [m (make-empty-map 7)]
-    (drop-n m ["v"] [r1x1] 100)
+    (drn m ["v"] [r1x1] 100)
     (assert-eq m.top 100))
   (let [m (make-empty-map 7)]
-    (drop-n m ["v"] [r1x2] 100)
+    (drn m ["v"] [r1x2] 100)
     (assert-eq m.top 200))
   (let [m (make-empty-map 7)]
-    (drop-n m ["<"] [r1x1] 100)
+    (drn m ["<"] [r1x1] 100)
     (assert-eq m.top 100)
     (for [y 0 99 1]
       (assert (points.get m [0 y 0]))))
   (let [m (make-empty-map 7)]
-    (drop-n m [">"] [r2x1] 100)
+    (drn m [">"] [r2x1] 100)
     (assert-eq m.top 100)
     (for [y 0 99 1]
       (assert (points.get m [6 y 0])))))
 
 (fn solve-a [jets]
   (let [m (make-empty-map 7)]
-    (drop-n m jets *rocks* 2022)
+    (drop-n m (cyclic-stream jets) (cyclic-stream *rocks*) 2022)
     m.top))
-(fn solve-b [x] 0)
+
+(fn top-n-rows [m z]
+  (var r [])
+  (for [y m.top (- m.top z) -1]
+    (for [x 0 (- m.width 1) 1]
+      (table.insert r (if (points.get m [x y 0]) "#" "."))))
+  (table.concat r))
+
+(fn solve-b [jets]
+  (var lt 0)
+  (var ps [])
+  (var jet-stream (cyclic-stream jets))
+  (var rock-stream (cyclic-stream *rocks*))
+  (var m (make-empty-map 7))
+  (var rs {})
+  (for [i 1 50 1]
+    (drop-n m jet-stream rock-stream (* (# jets) (# *rocks*)))
+    (let [r (top-n-rows m 15)]
+      (print r)
+      (when (. rs r)
+          (print (.. "!! " (. rs r) " " i)))
+      (tset rs r i)))
+  0)
+
+; For part b: for the state to recur, we need:
+; 1. The same stream of rocks
+; 2. The same stream of jets
+; 3. The same last part of the cavern, which is the area above the lowest
+;    section of floor
+; Experimentally (3) happens ~never - I ran 100 periods for (* jets rocks)
+; and never saw the same distance-to-floor, let alone the same structure above
+; it. So, that's not going to work.
+;
+; How about: how far the first rock (dropped now) would fall below the top? If
+; the answer to *that* varies, we can find one where it is 0, and then treat
+; that as the start of a new recurrence cycle?
+;
+; Those are basically always very small numbers (like, [0 1 2]) but do not show
+; any obvious recurrence pattern. What if we look at the top n rows only?
+;
+; There are some apparent patterns, but they don't seem to hold up in the long
+; run and I'm not sure why. For example, after 9 periods the top 4 rows match
+; those after 5 periods, and that holds for 13 and 17 but then not for 21.
+;
+; If I try "top 6 rows" instead, 13 and 5 match, 23 and 18 match, 33 and 17
+; match, but there's no particular reason to think any of these are big enough
+; windows for an actual recurrence. Even using top *10* rows, there's a
+; recurrence between 23 and 18, but there's none between 28 and 23, so that
+; won't work either.
 
 {
   : check
