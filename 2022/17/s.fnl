@@ -176,48 +176,6 @@
         fp    (math.floor (/ (- nrocks (+ e p)) p))]
     (+ eh (* fp ph) rh)))
 
-
-; For part b: for the state to recur, we need:
-; 1. The same stream of rocks
-; 2. The same stream of jets
-; 3. The same last part of the cavern, which is the area above the lowest
-;    section of floor
-; Experimentally (3) happens ~never - I ran 100 periods for (* jets rocks)
-; and never saw the same distance-to-floor, let alone the same structure above
-; it. So, that's not going to work.
-;
-; How about: how far the first rock (dropped now) would fall below the top? If
-; the answer to *that* varies, we can find one where it is 0, and then treat
-; that as the start of a new recurrence cycle?
-;
-; Those are basically always very small numbers (like, [0 1 2]) but do not show
-; any obvious recurrence pattern. What if we look at the top n rows only?
-;
-; There are some apparent patterns, but they don't seem to hold up in the long
-; run and I'm not sure why. For example, after 9 periods the top 4 rows match
-; those after 5 periods, and that holds for 13 and 17 but then not for 21.
-;
-; If I try "top 6 rows" instead, 13 and 5 match, 23 and 18 match, 33 and 17
-; match, but there's no particular reason to think any of these are big enough
-; windows for an actual recurrence. Even using top *10* rows, there's a
-; recurrence between 23 and 18, but there's none between 28 and 23, so that
-; won't work either.
-;
-; Could I do direct simulation? if I try dropping #jets * #rocks * 10 rocks,
-; that takes 12 seconds, so a direct sim (if I figured out how to compact the
-; map) would take 12 million seconds (ish), which is way too long.
-
-; 5 9 14 21 25 29 33 38 4 13 17 21 26 39
-; 3 7 11 15 19 29 33 38 2 11 16 20 24 29 35 6 12 17 21 25 35 39 4 10 16 22 26 31 37 3 11 15 19 24 37
-; 3 7 11 15 19 29 33 38 2 11 16 20 24 29 35 6 12 17 21 25 35 39 4 10 16 22 26 31 37 3 11 15 19 24 37
-; 3 7 11 15 19 29 33 38 2 11 16 20 24 29 35 6 12 17 21 25 35 39 4 10 16 22 26 31 37 3 11 15 19 24 37
-; 3 7 11 15 19 29 33 38 2 11 16 20 24 29 35 6 12 17 21 25 35 39 4 10 16 22 26 31 37 3 11 15 19 24 37
-; 3 7 11 15 19 29 33 38 2 11 16 20 24 29 35 6 12 17 21 25 35 39 4 10 16 22 26 31 37 3 11 15 19 24 37
-; 3 7 11 15 19 29 33 38 2 11 16 20 24 29 35 6 12 17 21 25 35 39 4 10 16 22 26 31 37 3 11 15 19 24 37
-; 3 7 11 15 19 29 33 38 2 11 16 20 24 29 35 6 12 17 21 25 35 39 4 10 16 22 26 31 37 3 11 15 19 24 37
-; 3 7 11 15 19 29 33 38 2 11 16 20 24 29 35 6 12 17 21 25 35 39 4 10 16 22 26 31 37 3 11 15 19 24 37
-; 3 7 11 15 19 29
-
 {
   : check
   : read
