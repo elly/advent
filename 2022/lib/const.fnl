@@ -8,6 +8,10 @@
 
 (local dirs [:up :right :down :left])
 (local dirmods [[0 -1] [1 0] [0 1] [-1 0]])
+(local dirmods3
+  [[-1  0  0] [ 1  0  0]
+   [ 0 -1  0] [ 0  1  0]
+   [ 0  0 -1] [ 0  0  1]])
 
 {
   : a-z
@@ -18,4 +22,5 @@
 
   : dirs
   : dirmods
+  : dirmods3
 }

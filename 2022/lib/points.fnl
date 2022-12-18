@@ -17,6 +17,26 @@
       (each [zk zv (pairs yv)]
         (f [xk yk zk] zv)))))
 
+(fn bounding-box [s]
+  (var min-x nil)
+  (var max-x nil)
+  (var min-y nil)
+  (var max-y nil)
+  (var min-z nil)
+  (var max-z nil)
+  (each [xk xv (pairs s)]
+    (each [yk yv (pairs xv)]
+      (each [zk zv (pairs yv)]
+        (when (or (not min-x) (< xk min-x)) (set min-x xk))
+        (when (or (not max-x) (> xk max-x)) (set max-x xk))
+        (when (or (not min-y) (< yk min-y)) (set min-y yk))
+        (when (or (not max-y) (> yk max-y)) (set max-y yk))
+        (when (or (not min-z) (< zk min-z)) (set min-z zk))
+        (when (or (not max-z) (> zk max-z)) (set max-z zk)))))
+  { :x { :min min-x :max max-x }
+    :y { :min min-y :max max-y }
+    :z { :min min-z :max max-z } })
+
 (fn get [s p]
   (?. s (. p 1) (. p 2) (. p 3)))
 
@@ -38,6 +58,7 @@
 {
   : add
   : all
+  : bounding-box
   : check
   : get
   : make
