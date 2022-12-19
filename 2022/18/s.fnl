@@ -36,11 +36,16 @@
                 (table.insert q (point3+ p d)))))))
 
   (var m (points.make))
+  (print "init")
   (each [_ line (ipairs lines)]
     (points.add m (str.allnums line) :lava))
+  (print "lava")
   (let [bb (outset (points.bounding-box m))]
+    (pretty bb)
     (fill-box m bb :air)
+    (print "air")
     (flood-fill m bb :air :steam [bb.x.min bb.y.min bb.z.min]))
+  (print "flood")
   m)
 
 (fn open-faces [m p open?]
