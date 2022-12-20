@@ -16,7 +16,7 @@
     (tset n :n h)
     (tset h.p :n n)
     (tset h :p n))
-  h)
+  (values h (# ns)))
 
 (fn linkfind [linked v]
   (var h linked)
@@ -57,9 +57,11 @@
 (fn abs [x] (if (< x 0) (* -1 x) x))
 
 (fn walk [node n]
-  (var t node)
   (local k (if (< n 0) :p :n))
-  (for [i 1 (abs n) 1]
+  (var t node)
+  (var i 0)
+  (while (not (= i (abs n)))
+    (set i (+ i 1))
     (set t (. t k)))
   t)
 
@@ -70,6 +72,7 @@
            (toptr node)
            " [" node.v "] -> "
            (toptr node.n))))
+  (print (.. "dumping " (toptr linked)))
   (var h linked.n)
   (prn linked)
   (while (not (= h linked))
@@ -77,47 +80,61 @@
     (set h h.n))
   linked)
 
-(fn move [linked v]
+(fn move [linked lc t d]
   (linkcheck linked)
-  (local t (linkfind linked v))
-  (local p (walk t.p v))
+  (var p t.p)
   (unlink t)
-  (link p t)
+  (var np (walk p (% d (- lc 1))))
+  (link np t)
   (linkcheck linked))
 
 (fn flatten [linked]
-  (var r [linked.v])
+  (var r [linked])
   (var h linked)
   (while (not (= h.n linked))
          (set h h.n)
-         (table.insert r h.v))
+         (table.insert r h))
   r)
 
-(fn mix [linked]
-  (each [_ v (ipairs (flatten linked))]
-    (move linked v))
+(fn mix [linked lc rounds]
+  (local rounds (or rounds 1))
+  (local items (flatten linked))
+  (for [i 1 rounds 1]
+    (each [_ n (ipairs items)]
+      (move linked lc n n.v)))
   linked)
+
+(fn extract [h]
+  (+ (. (walk h 1000) :v)
+     (. (walk h 2000) :v)
+     (. (walk h 3000) :v)))
 
 ; 10144 too high
 ; 8427 too high
 (fn solve-a [numbers]
-  (fn prodz [h]
-    (+ (pretty (. (walk h 1000) :v))
-       (pretty (. (walk h 2000) :v))
-       (pretty (. (walk h 3000) :v))))
   (-> numbers
       tolinked
       mix
       (linkfind 0)
-      prodz))
+      extract))
 
-(fn solve-b [numbers] 0)
+(fn solve-b [numbers]
+  (let [(l n) (tolinked (tbl.map numbers #(* $1 811589153)))]
+    (mix l n 10)
+    (extract (linkfind l 0))))
 
 (fn check []
   (var q (tolinked [1 2 3]))
   (assert (linkfind q 1))
   (assert (linkfind q 3))
   (assert (not (linkfind q 4)))
+
+  (assert-eq 1 (. (walk q 0) :v))
+  (assert-eq 2 (. (walk q 1) :v))
+  (assert-eq 3 (. (walk q 2) :v))
+  (assert-eq 1 (. (walk q 3) :v))
+  (assert-eq 3 (. (walk q -1) :v))
+  (assert-eq 2 (. (walk q -2) :v))
 
   (let [z (linkfind q 1)
         t (linkfind q 2)]
@@ -132,14 +149,23 @@
     (assert (linkfind t 2))
     (assert (linkfind t 3)))
 
-  (let [e (tolinked [1 2 -4])]
-    (move e -4)
-    (assert (= e.n.v 2))
-    (assert (= e.p.v 1)))
-  (let [e (tolinked [1 3 2])]
-    (move e 3)
-    (assert (= e.n.v 2))
-    (assert (= e.p.v 1))))
+  (fn t [d p n]
+    (var l (tolinked [:a :b :c :d :e]))
+    (move l 5 (linkfind l :a) d)
+    (assert-eq (. (linkfind l :a) :p :v) p)
+    (assert-eq (. (linkfind l :a) :n :v) n))
+
+  (t 0 :e :b)
+  (t 1 :b :c)
+  (t 2 :c :d)
+  (t 3 :d :e)
+  (t 4 :e :b)
+
+  (t -1 :d :e)
+  (t -2 :c :d)
+  (t -3 :b :c)
+  (t -4 :e :b)
+)
 
 {
   : check
