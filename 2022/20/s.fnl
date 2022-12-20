@@ -27,19 +27,6 @@
              (set found h)))
   found)
 
-(fn linkcheck [linked]
-  (fn checknode [n]
-    (assert n.n)
-    (assert n.p)
-    (assert (= n.p.n n))
-    (assert (= n.n.p n)))
-
-  (checknode linked)
-  (var h linked.n)
-  (while (not (= h linked))
-    (checknode h)
-    (set h h.n)))
-
 (fn toptr [t] (string.gsub (tostring t) "table: " ""))
 
 (fn unlink [t]
@@ -81,12 +68,10 @@
   linked)
 
 (fn move [linked lc t d]
-  (linkcheck linked)
   (var p t.p)
   (unlink t)
   (var np (walk p (% d (- lc 1))))
-  (link np t)
-  (linkcheck linked))
+  (link np t))
 
 (fn flatten [linked]
   (var r [linked])
@@ -140,8 +125,6 @@
         t (linkfind q 2)]
     (unlink z)
     (link t z)
-    (linkcheck z)
-    (linkcheck t)
     (assert (linkfind z 1))
     (assert (linkfind z 2))
     (assert (linkfind z 3))
