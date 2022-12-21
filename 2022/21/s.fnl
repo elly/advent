@@ -86,7 +86,22 @@
   (let [t (reduce-many vars tree)]
     (rewrite-many t)))
 
+(fn check []
+  (assert-eq 1 (reduce-many { :x 1 } :x))
+  (assert-eq 5 (reduce-many { :x 2 :y 3 } [:+ :x :y]))
+  (let [t (reduce-many { :x 2 :y 3 } [:+ [:* :x 2] [:+ :z :y]])]
+    (assert-eq (. t 2) 4)
+    (assert-eq (. t 3 1) :+)
+    (assert-eq (. t 3 2) :z)
+    (assert-eq (. t 3 3) 3))
+
+  (assert-eq 3 (rewrite-many [:= :x 3]))
+  (assert-eq 4 (rewrite-many [:= [:+ :x 1] 5]))
+  (assert-eq 4 (rewrite-many [:= [:- 7 :x] 3]))
+  (assert-eq 3 (rewrite-many [:= [:/ 12 :x] 4])))
+
 {
+  : check
   : read
   : solve-a
   : solve-b
