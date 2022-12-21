@@ -83,8 +83,7 @@
 (fn solve-b [[tree vars]]
   (tset vars :humn nil)
   (tset tree 1 :=)
-  (let [t (reduce-many vars tree)]
-    (rewrite-many t)))
+  (rewrite-many (reduce-many vars tree)))
 
 (fn check []
   (assert-eq 1 (reduce-many { :x 1 } :x))
