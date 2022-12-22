@@ -28,6 +28,8 @@
   (local map (read-map lines))
   { : map : path })
 
+(fn tile [m p] (or (. m (pk p)) " "))
+
 (fn follow-one [map you p]
   (fn turn [dir lr]
     (match dir
@@ -36,30 +38,14 @@
       [-1 0]       (if (= lr :L) [0 1] [0 -1])
       [0  1]       (if (= lr :L) [1 0] [-1 0])))
 
-  (fn oppose [dir]
-    (match dir
-      [1 0]   [-1 0]
-      [0 -1]  [0 1]
-      [-1 0]  [1 0]
-      [0 1]   [0 -1]))
-
-  (fn tile [p] (or (. map (pk p)) " "))
-
-  (fn wrap []
-    (let [d (oppose you.dir)]
-      (var np you.loc)
-      (while (not (= (tile (pt+ np d)) " "))
-        (set np (pt+ np d)))
-      (if (= (tile np) ".")
-          (do (tset you :loc np) true)
-          false)))
-
   (fn step []
-    (let [np (pt+ you.loc you.dir)]
-      (match (tile np)
-        "#"        false
-        "."        (do (tset you :loc np) true)
-        " "        (wrap))))
+    (var np (pt+ you.loc you.dir))
+    (when (= (tile map np) " ")
+      (set np (map.wrap map you)))
+    (match (tile map np)
+      "#"        false
+      "."        (do (tset you :loc np) true)
+      " "        (assert false)))
 
   (fn steps [n]
     (var n n)
@@ -85,6 +71,20 @@
                _ p (ipairs path)]
     (follow-one map you p)))
 
+(fn oppose [dir]
+  (match dir
+    [1 0]   [-1 0]
+    [0 -1]  [0 1]
+    [-1 0]  [1 0]
+    [0 1]   [0 -1]))
+
+(fn wrap-a [map you]
+  (let [d (oppose you.dir)]
+    (var np you.loc)
+    (while (not (= (tile map (pt+ np d)) " "))
+      (set np (pt+ np d)))
+    np))
+
 (fn facing-index [you]
   (match you.dir
     [1 0]   0
@@ -92,13 +92,35 @@
     [-1 0]  2
     [0 -1]  3))
 
-(fn solve-a [spec]
+(fn solve [spec wrapf]
+  (tset spec.map :wrap wrapf)
   (let [you (follow spec.map spec.path)]
     (+ (* 1000 (. you.loc 2))
        (* 4 (. you.loc 1))
        (facing-index you))))
 
-(fn solve-b [spec] 0)
+(fn solve-a [spec] (solve spec wrap-a))
+
+(fn cube-map [map]
+  (fn is-test-input? [m]
+    (. m "51/1"))
+
+  (local test-cube-map
+    {
+      :fs [4 4]
+      :faces [[9 1] [9 5] [5 5] [1 5] [9 9] [13 9]]
+      :fm [
+        { :up ... :down ... :left ... :right ... }
+      ]
+    })
+
+  (if (is-test-input? map)
+      test-cube-map
+      prod-cube-map))
+
+(fn solve-b [spec]
+  (let [cube (cube-map spec.map)]
+    (pretty faces)))
 
 (fn check [])
 
