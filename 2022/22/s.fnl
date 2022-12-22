@@ -146,7 +146,7 @@
         { :up [6 :up] :down [3 :left] :left [1 :left] :right [5 :left] }
         { :up [1 :up] :down [5 :down] :left [4 :down] :right [2 :up] }
         { :up [3 :right] :down [6 :down] :left [1 :right] :right [5 :right] }
-        { :up [3 :up] :down [6 :left] :left [4 :left] :right [2 :right] }
+        { :up [3 :up] :down [6 :left] :left [4 :left] :right [2 :left] }
         { :up [4 :up] :down [2 :down] :left [1 :down] :right [5 :up] }
       ]
     })
@@ -180,13 +180,13 @@
           fs (- cm.fs 1)]
       (match [od nd]
           ; top edge -> bottom edge: preserve x, y = bottom
-          [:up :up]      [(+ fx ncx) (+ fs ncy)]
+          [:up :up]                    [(+ fx ncx) (+ fs ncy)]
           ; top edge -> top edge: high x -> low x
-          [:up :down]    [(- (+ fs ncx) fx) ncy]
+          [:up :down]                  [(- (+ fs ncx) fx) ncy]
           ; top edge -> right edge (facing left): low x -> high y
-          [:up :left]    [(+ fs ncx) (- (+ fs ncy) fx)]
+          [:up :left]                  [(+ fs ncx) (- (+ fs ncy) fx)]
           ; top edge -> left edge (facing right): low x -> low y
-          [:up :right]   [ncx (+ ncy fx)]
+          [:up :right]                 [ncx (+ ncy fx)]
 
           ; bottom edge -> bottom edge, high x -> low x
           [:down :up]                  [(- (+ fs ncx) fx) (+ fs ncy)]
@@ -203,15 +203,15 @@
           [:left :down]                [(+ ncx fy) ncy]
           ; left edge -> right edge:
           [:left :left]                [(+ ncx fs) (+ ncy fy)]
-          ; left edge -> left edge:
-          [:left :right]               [ncx (+ ncy fy)]
+          ; left edge -> left edge:    low y -> high y
+          [:left :right]               [ncx (- (+ fs ncy) fy)]
 
           ; right edge -> bottom edge:   low y -> low x
           [:right :up]                 [(+ ncx fy) (+ ncy fs)]
           ; right edge -> top edge:      low y -> high x
           [:right :down]               [(- (+ ncx fs) fy)  ncy]
-          ; right edge -> right edge:
-          [:right :left]               [(+ ncx fs) (+ ncy fy)]
+          ; right edge -> right edge:   low y -> high y
+          [:right :left]               [(+ ncx fs) (- (+ fs ncy) fy)]
           ; right edge -> left edge:
           [:right :right]              [ncx (+ ncy fy)]
       )))
@@ -219,10 +219,12 @@
   (let [f (face you.loc)
         nf (. cm.fm f you.dir)
         lp (landing-point f nf)]
+    (assert (= (face lp) (. nf 1)))
     (pretty [you.loc f nf lp])
     (values lp (. nf 2))))
 
 ; 6276 wrong
+; 21536 wrong
 (fn solve-b [spec]
   (let [cm (cube-map spec.map)]
     (solve spec #(wrap-b $1 $2 cm))))
