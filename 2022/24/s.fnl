@@ -60,12 +60,12 @@
 (fn mkmodel [spec]
   (var r [])
   (var spec spec)
-  (for [i 1 256 1]
+  (for [i 1 2000 1]
     (set spec (step spec))
     (table.insert r spec.blizzards))
   { :states r :rows spec.rows :cols spec.cols })
 
-(fn pathfind [model start end]
+(fn pathfind [model start end bstep]
   (assert model)
   (assert start)
   (assert end)
@@ -73,7 +73,7 @@
   (fn in-bounds? [[x y]]
     (or (pt=? [x y] start) (pt=? [x y] end)
         (and (> x 1) (< x model.cols)
-             (> y 1) (< y model.cols))))
+             (> y 1) (< y model.rows))))
 
   (fn legal? [p s]
     (assert (< s (# model.states)))
@@ -86,9 +86,10 @@
         p
         (pt+ p (. const.dirdelta d))))
 
-  (var queue [(pk3 start 0)])
+  (var queue [(pk3 start bstep)])
   (var pre {})
   (var visited {})
+  (var queued {})
   (var done nil)
   (var ld 0)
   (var nv 0)
@@ -107,27 +108,38 @@
             (set done s))
       (each [_ d (ipairs [:n :s :w :e :x])]
         (let [np (move p d) ns (+ s 1) nk (pk3 np ns)]
-          (when (and (not (. visited nk)) (legal? np ns))
+          (when (and (not (. queued nk)) (legal? np ns))
+                (tset queued nk true)
                 (table.insert queue nk)
                 (tset pre nk e))))))
 
   (var path [])
   (var endstate (pk3 end done))
-  (while (not (= endstate (pk3 start 0)))
+  (while (not (= endstate (pk3 start bstep)))
     (table.insert path endstate)
     (set endstate (. pre endstate)))
   (table.insert path endstate)
-  path)
 
+  (each [_ e (ipairs path)]
+    (let [(p s) (unpk3 e)]
+      (assert (legal? p s))))
+
+  (length path))
 
 (fn solve-a [spec]
   (let [model (mkmodel spec)
         start [2 1]
-        end [(- spec.cols 1) spec.rows]
-        path (pathfind model start end)]
-    (- (# path) 1)))
+        end [(- spec.cols 1) spec.rows]]
+    (- (pathfind model start end 0) 1)))
 
-(fn solve-b [spec] 0)
+(fn solve-b [spec]
+  (let [model (mkmodel spec)
+        start [2 1]
+        end [(- spec.cols 1) spec.rows]
+        a (pathfind model start end 0)
+        b (pathfind model end start a)
+        c (pathfind model start end (+ a b))]
+  (+ a b c -1)))
 
 (fn check [])
 
