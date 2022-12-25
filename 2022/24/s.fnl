@@ -27,105 +27,86 @@
   (each [y line (ipairs lines)]
     (each [x char (ipairs (str.explode line))]
       (when (char->dir char)
-            (tset blizzards (pk [x y]) [(char->dir char)]))))
+            (tset blizzards (pk [x y]) (char->dir char)))))
   {
     : blizzards
     :rows (# lines)
     :cols (# (. lines 1))
   })
 
-(fn step [m]
-  (fn wrap [[x y]]
-    [(if (= x 1) (- m.cols 1)
-         (= x m.cols) 2
-         x)
-     (if (= y 1) (- m.rows 1)
-         (= y m.rows) 2
-         y)])
-
-  (fn num-blizzards [s]
-    (accumulate [t 0 _ c (pairs s)] (+ t (# c))))
-
-  (var nb {})
-  (each [b bs (pairs m.blizzards)]
-    (each [_ d (ipairs bs)]
-      (let [np (wrap (pt+ (unpk b) (. const.dirdelta d)))
-            npk (pk np)]
-        (when (not (. nb npk))
-          (tset nb npk []))
-        (table.insert (. nb npk) d))))
-  (assert (= (num-blizzards m.blizzards) (num-blizzards nb)))
-  { :blizzards nb :rows m.rows :cols m.cols })
-
 (fn mkmodel [spec]
-  (var r [])
-  (var spec spec)
-  (for [i 1 256 1]
-    (set spec (step spec))
-    (table.insert r spec.blizzards))
-  { :states r :rows spec.rows :cols spec.cols })
+  "We can compute in advance which turns will allow moving to a square, by
+   knowing when blizzards return to the square."
+  (fn move-blizzard [[x y] b]
+    (let [mr (- spec.rows 1) mc (- spec.cols 1)]
+      (match [x y b]
+        [_ mr :s] [x 2]
+        [_  2 :n] [x mr]
+        [mc _ :e] [2 y]
+        [2  _ :w] [mc y]
+        [x y d] (pt+ [x y] (. const.dirdelta b)))))
 
-(fn pathfind [model start end]
-  (assert model)
-  (assert start)
-  (assert end)
+  (fn add-blizzard [rs p b]
+    (local xykey (if (or (= b :n) (= b :s)) :y :x))
+    (var np (move-blizzard p b))
+    (var d 0)
+    (tset (. rs (pk p) xykey) 0 true)
+    (while (not (pt=? p np))
+      (set d (+ d 1))
+      (tset (. rs (pk np) xykey) d true)
+      (set np (move-blizzard np b))))
 
-  (fn in-bounds? [[x y]]
-    (or (pt=? [x y] start) (pt=? [x y] end)
-        (and (> x 1) (< x model.cols)
-             (> y 1) (< y model.cols))))
+  (var rs { :x (- spec.cols 2) :y (- spec.rows 2) })
+  (for [y 2 (- spec.rows 1) 1]
+    (for [x 2 (- spec.cols 1) 1]
+      (tset rs (pk [x y]) { :x {} :y {} })))
 
-  (fn legal? [p s]
-    (assert (< s (# model.states)))
-    (or (= s 0)
-        (and (in-bounds? p)
-             (not (. model.states s (pk p))))))
+  (for [y 2 (- spec.rows 1) 1]
+    (for [x 2 (- spec.cols 1) 1]
+      (let [b (. spec.blizzards (pk [x y]))]
+        (when b
+          (add-blizzard rs [x y] b)))))
+  rs)
 
-  (fn move [p d]
-    (if (= d :x)
-        p
-        (pt+ p (. const.dirdelta d))))
+(fn move [p d]
+  (if (= d :x)
+      p
+      (pt+ p (. const.dirdelta d))))
 
-  (var queue [(pk3 start 0)])
-  (var pre {})
-  (var visited {})
-  (var done nil)
-  (var ld 0)
-  (var nv 0)
+(fn safe-at? [model m p]
+  (local k (pk p))
+  (fn safe-at-v? [xy]
+    (not (?. model k xy (% m (. model xy)))))
+  (and (safe-at-v? :x)
+       (safe-at-v? :y)))
 
-  (while (and (> (# queue) 0) (not done))
-    (local e (table.remove queue 1))
-    (when (not (. visited e))
-      (local (p s) (unpk3 e))
-      (when (> s ld)
-        (print (.. "scan " s " " (# queue) " " nv))
-        (set ld s))
-      (assert (legal? p s))
-      (tset visited e true)
-      (set nv (+ nv 1))
-      (when (pt=? p end)
-            (set done s))
-      (each [_ d (ipairs [:n :s :w :e :x])]
-        (let [np (move p d) ns (+ s 1) nk (pk3 np ns)]
-          (when (and (not (. visited nk)) (legal? np ns))
-                (table.insert queue nk)
-                (tset pre nk e))))))
+; To see if the answer is m + 1:
+; 1. Test if the end position is safe at m
+; 2. DFS towards the start, looking at neighbor positions that are safe at m - i
+; 3. If you get there, success
 
-  (var path [])
-  (var endstate (pk3 end done))
-  (while (not (= endstate (pk3 start 0)))
-    (table.insert path endstate)
-    (set endstate (. pre endstate)))
-  (table.insert path endstate)
-  path)
+(fn try-m [model start end m]
+  (if (< m 0)                      false
+      (not (safe-at? model m end)) false
+      (pt=? start end)             true
+      (do
+        (var done false)
+        (each [_ d (ipairs [:n :s :w :e :x]) &until done]
+          (when (try-m model start (move end d) (- m 1))
+                (set done true)))
+        done)))
 
+(fn find-m [model start end]
+  (var done false)
+  (for [m 1 100 1 &until done]
+    (print (.. "try " m))
+    (when (try-m model start end m)
+          (set done m)))
+  done)
 
 (fn solve-a [spec]
-  (let [model (mkmodel spec)
-        start [2 1]
-        end [(- spec.cols 1) spec.rows]
-        path (pathfind model start end)]
-    (- (# path) 1)))
+  (let [model (mkmodel spec)]
+    (find-m model [2 1] [(+ model.x 1) (+ model.y 1)])))
 
 (fn solve-b [spec] 0)
 
