@@ -9,7 +9,9 @@
   (let [m (require (.. "lib/" name))]
     (m.check)))
 
-(fn check-libs [])
+(fn check-libs []
+  (check-lib :cloud)
+  (check-lib :point))
 
 (fn lines-from-file [name default]
   (let [fin (io.open name "r")]
