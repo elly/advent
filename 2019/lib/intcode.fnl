@@ -3,6 +3,18 @@
 (fn fault [vm why state]
   (error (.. "fault: " vm.pc " " why ": " (table.concat state ","))))
 
+(fn make-default-in [vm]
+  (fn []
+    (if (> (# vm.inbuf) 0)
+        (table.remove vm.inbuf 1)
+        (do (fault vm "noinput") 0))))
+
+(fn make-default-out [vm]
+  (fn [v]
+    (table.insert vm.outbuf v)
+    (when (and (>= v 32) (<= v 127))
+      (io.write (string.char v)))))
+
 (fn computebin [vm insn a1 a2]
   (match insn.name
     :add (+ a1 a2)
@@ -20,11 +32,16 @@
   (tset vm.mem (+ 1 addr) v)
   vm)
 
-(fn argload [vm arg]
-  (peek vm arg))
+(fn argload [vm [val mode]]
+  (if (= mode :imm)
+      val
+      (peek vm val)))
 
-(fn argstore [vm arg v]
-  (poke vm arg v))
+(fn argstore [vm [val mode] v]
+  (when (= mode :imm)
+        (fault vm "immwrite" [val mode v]))
+  (when (= mode :pos)
+        (poke vm val v)))
 
 (fn opbin [vm insn [arg1 arg2 arg3]]
   (let [i1 (argload vm arg1)
@@ -35,20 +52,66 @@
 (fn ophlt [vm insn]
   (tset vm :halt true))
 
+(fn opin [vm insn [arg1]]
+  (let [iv (vm.infunc)]
+    (when vm.tracing.io
+      (print "inp " vm.pc ": " iv " -> " (. arg1 1)))
+    (argstore vm arg1 iv)))
+
+(fn opout [vm insn [arg1]]
+  (let [ov (argload vm arg1)]
+    (when vm.tracing.io
+      (print (.. "out " vm.pc ": " (. arg1 1) "/" (. arg1 2) " -> " ov)))
+    (vm.outfunc ov)))
+
+(fn jump [vm where]
+  (tset vm :pc where))
+
+(fn opjtr [vm insn [arg1 arg2]]
+  (when (not (= 0 (argload vm arg1)))
+        (jump vm (argload vm arg2))))
+
+(fn opjfa [vm insn [arg1 arg2]]
+  (when (= 0 (argload vm arg1))
+        (jump vm (argload vm arg2))))
+
+(fn opclt [vm insn [in1 in2 out]]
+  (argstore vm out
+    (if (< (argload vm in1) (argload vm in2))
+        1
+        0)))
+
+(fn opceq [vm insn [in1 in2 out]]
+  (argstore vm out
+    (if (= (argload vm in1) (argload vm in2))
+        1
+        0)))
+
 (local *ops*
   {
     1 { :name :add :args 3 :fn opbin }
     2 { :name :mul :args 3 :fn opbin }
+    3 { :name :inp :args 1 :fn opin }
+    4 { :name :out :args 1 :fn opout }
+    5 { :name :jtr :args 2 :fn opjtr }
+    6 { :name :jfa :args 2 :fn opjfa }
+    7 { :name :clt :args 3 :fn opclt }
+    8 { :name :ceq :args 3 :fn opceq }
     99 { :name :hlt :args 0 :fn ophlt }
   })
 
 (fn copy [vm]
-  {
+  (var r {
     :halt vm.halt
+    :inbuf []
+    :outbuf []
     :mem (icollect [_ v (ipairs vm.mem)] v)
     :pc vm.pc
     :tracing (collect [k v (pairs vm.tracing)] k v)
   })
+  (tset r :infunc (make-default-in r))
+  (tset r :outfunc (make-default-out r))
+  r)
 
 (fn make [mem]
   (fn read-mem [ints]
@@ -56,25 +119,57 @@
   (var mem (if (= (type (. mem 1)) :string)
            (read-mem (. mem 1))
            mem))
-  {
+  (var r {
     :halt false
+    :inbuf []
+    :outbuf []
     : mem
     :pc 0
     :tracing {}
   })
+  (tset r :infunc (make-default-in r))
+  (tset r :outfunc (make-default-out r))
+  r)
 
-(fn decode [opcode] (. *ops* opcode))
+(fn hookio [vm infunc outfunc]
+  (when infunc (tset vm :infunc infunc))
+  (when outfunc (tset vm :outfunc outfunc))
+  vm)
+
+(fn pushin [vm v]
+  (table.insert vm.inbuf v)
+  vm)
+
+(local *modes* [:pos :imm])
+
+(fn decode [opcode]
+  (fn decode-modes [modes]
+    (var r [])
+    (var modes modes)
+    (while (> modes 0)
+      (table.insert r (. *modes* (+ 1 (% modes 10))))
+      (set modes (math.floor (/ modes 10))))
+    r)
+
+  (let [modes (math.floor (/ opcode 100))
+        opcode (% opcode 100)]
+    (values
+      (. *ops* opcode)
+      (decode-modes modes))))
 
 (fn step [vm]
-  (fn load-args [insn]
+  (fn load-args [insn modes]
     (fcollect [i 1 insn.args 1]
-      (peek vm (+ vm.pc i))))
+      [(peek vm (+ vm.pc i)) (or (. modes i) :pos)]))
 
   (fn advance-pc [insn]
     (tset vm :pc (+ vm.pc insn.args 1)))
 
   (fn trace [insn args]
-    (print (.. "x " vm.pc ": " insn.name " " (table.concat args ", "))))
+    (local pargs
+      (icollect [_ a (ipairs args)]
+        (.. (. a 1) "/" (. a 2))))
+    (print (.. "x " vm.pc ": " insn.name " " (table.concat pargs ", "))))
 
   (fn dispatch [insn args]
     (when vm.tracing.exec
@@ -83,10 +178,10 @@
 
   (let [oldpc vm.pc
         opcode (peek vm vm.pc)
-        insn (decode opcode)]
+        (insn modes) (decode opcode)]
     (when (not insn)
           (fault vm "badop" [opcode]))
-    (dispatch insn (load-args insn))
+    (dispatch insn (load-args insn modes))
     (when (= oldpc vm.pc)
           (advance-pc insn)))
 
@@ -103,9 +198,11 @@
 
 {
   : copy
+  : hookio
   : make
   : peek
   : poke
+  : pushin
   : run
   : step
   : trace

@@ -1,4 +1,4 @@
-#!/usr/bin/fennel5.4
+#!/usr/bin/env fennel
 ; Advent 2019 runner
 
 (local fennel (require :fennel))
