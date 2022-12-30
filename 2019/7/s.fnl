@@ -17,7 +17,6 @@
   (. fo (# fo)))
 
 (fn make-amp [image loopback inits]
-  (var final-out [])
   (fn make-pipe [inits tee]
     (var buf (icollect [_ v (ipairs inits)] v))
     (values
@@ -31,30 +30,23 @@
       (ic.hookio v1 nil out)
       (ic.hookio v2 in nil)))
 
-  (local a (ic.copy image))
-  (local b (ic.copy image))
-  (local c (ic.copy image))
-  (local d (ic.copy image))
-  (local e (ic.copy image))
+  (local vms (fcollect [i 1 (# inits) 1] (ic.copy image)))
 
-  (ic.tag a "a ")
-  (ic.tag b "b ")
-  (ic.tag c "c ")
-  (ic.tag d "d ")
-  (ic.tag e "e ")
+  (for [i 1 (- (# vms) 1) 1]
+    (plug-together (. vms i) (. vms (+ i 1)) [(. inits (+ i 1))]))
 
-  (plug-together a b [(. inits 2)])
-  (plug-together b c [(. inits 3)])
-  (plug-together c d [(. inits 4)])
-  (plug-together d e [(. inits 5)])
+  (var final-out
+    (if loopback
+        []
+        (. vms (# vms) :outbuf)))
+
   (if loopback
-    (plug-together e a [(. inits 1) 0] final-out)
+    (plug-together (. vms (# vms)) (. vms 1) [(. inits 1) 0] final-out)
     (do
-      (ic.pushin a (. inits 1))
-      (ic.pushin a 0)
-      (set final-out e.outbuf)))
+      (ic.pushin (. vms 1) (. inits 1))
+      (ic.pushin (. vms 1) 0)))
 
-  (values [a b c d e] final-out))
+  (values vms final-out))
 
 (fn try-amp [image loopback inits]
   (let [(amp fo) (make-amp image loopback inits)]
