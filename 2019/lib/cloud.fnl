@@ -1,5 +1,20 @@
 ; lib/cloud - a cloud of points with a value at each point
 
+(fn envelop [r [x y z]]
+  (fn min [a b] (if (< a b) a b))
+  (fn max [a b] (if (> a b) a b))
+  (fn grow [
+        { :x { :min x- :max x+ }
+          :y { :min y- :max y+ }
+          :z { :min z- :max z+ } }
+        [x y z]]
+    { :x { :min (min x- x) :max (max x+ x) }
+      :y { :min (min y- y) :max (max y+ y) }
+      :z { :min (min z- z) :max (max z+ z) } })
+  (if (not r)
+      { :x { :min x :max x } :y { :min y :max y } :z { :min z :max z } }
+      (grow r [x y z])))
+
 (fn add! [c [x y z] v]
   (local v (or v true))
   (fn ensure [t k]
@@ -10,14 +25,16 @@
   (ensure (. c.pts x) y)
   (when (= (. c.pts x y z) nil)
         (tset c :card (+ 1 c.card)))
-  (tset (. c.pts x y) z v))
+  (tset (. c.pts x y) z v)
+  (tset c :bounds (envelop c.bounds [x y z])))
 
-(fn all [c]
+(fn all [c p]
   (var r [])
   (each [xk xv (pairs c.pts)]
     (each [yk yv (pairs xv)]
       (each [zk zv (pairs yv)]
-        (table.insert r [xk yk zk]))))
+        (when (or (not p) (p [xk yk zk]))
+          (table.insert r [xk yk zk])))))
   r)
 
 (fn get [c [x y z]]
@@ -28,6 +45,7 @@
 
 (fn make [] {
   :card 0
+  :bounds nil
   :pts {}
 })
 
