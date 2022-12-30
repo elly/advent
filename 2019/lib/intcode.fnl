@@ -1,19 +1,17 @@
 ; lib/intcode: intcode interpreter
 
 (fn fault [vm why state]
-  (error (.. "fault: " vm.pc " " why ": " (table.concat state ","))))
+  (error (.. vm.tag "fault: " vm.pc " " why ": " (table.concat state ","))))
 
 (fn make-default-in [vm]
   (fn []
     (if (> (# vm.inbuf) 0)
         (table.remove vm.inbuf 1)
-        (do (fault vm "noinput") 0))))
+        (do (fault vm "noinput" []) 0))))
 
 (fn make-default-out [vm]
   (fn [v]
-    (table.insert vm.outbuf v)
-    (when (and (>= v 32) (<= v 127))
-      (io.write (string.char v)))))
+    (table.insert vm.outbuf v)))
 
 (fn computebin [vm insn a1 a2]
   (match insn.name
@@ -23,12 +21,12 @@
 
 (fn peek [vm addr]
   (when vm.tracing.peek
-    (print (.. "r " vm.pc ": " addr " <- " (. vm.mem (+ 1 addr)))))
+    (print (.. vm.tag "r " vm.pc ": " addr " <- " (. vm.mem (+ 1 addr)))))
   (or (. vm.mem (+ 1 addr)) 0))
 
 (fn poke [vm addr v]
   (when vm.tracing.poke
-    (print (.. "w " vm.pc ": " addr " "  (. vm.mem (+ 1 addr)) " -> " v)))
+    (print (.. vm.tag "w " vm.pc ": " addr " "  (. vm.mem (+ 1 addr)) " -> " v)))
   (tset vm.mem (+ 1 addr) v)
   vm)
 
@@ -54,14 +52,17 @@
 
 (fn opin [vm insn [arg1]]
   (let [iv (vm.infunc)]
+    (assert (or (= nil iv) (= :number (type iv))) "in must yield number or nil")
     (when vm.tracing.io
-      (print "inp " vm.pc ": " iv " -> " (. arg1 1)))
-    (argstore vm arg1 iv)))
+      (print (.. vm.tag "inp " vm.pc ": " (or iv "(nil)") " -> " (. arg1 1))))
+    (if (= nil iv)
+      (do (tset vm :iowait true) nil)
+      (argstore vm arg1 iv))))
 
 (fn opout [vm insn [arg1]]
   (let [ov (argload vm arg1)]
     (when vm.tracing.io
-      (print (.. "out " vm.pc ": " (. arg1 1) "/" (. arg1 2) " -> " ov)))
+      (print (.. vm.tag "out " vm.pc ": " (. arg1 1) "/" (. arg1 2) " -> " ov)))
     (vm.outfunc ov)))
 
 (fn jump [vm where]
@@ -103,10 +104,12 @@
 (fn copy [vm]
   (var r {
     :halt vm.halt
+    :iowait false
     :inbuf []
     :outbuf []
     :mem (icollect [_ v (ipairs vm.mem)] v)
     :pc vm.pc
+    :tag ""
     :tracing (collect [k v (pairs vm.tracing)] k v)
   })
   (tset r :infunc (make-default-in r))
@@ -121,10 +124,12 @@
            mem))
   (var r {
     :halt false
+    :iowait false
     :inbuf []
     :outbuf []
     : mem
     :pc 0
+    :tag ""
     :tracing {}
   })
   (tset r :infunc (make-default-in r))
@@ -157,6 +162,10 @@
       (. *ops* opcode)
       (decode-modes modes))))
 
+(fn halted? [vm] vm.halt)
+(fn stopped? [vm]
+  (or vm.halt vm.iowait))
+
 (fn step [vm]
   (fn load-args [insn modes]
     (fcollect [i 1 insn.args 1]
@@ -169,7 +178,7 @@
     (local pargs
       (icollect [_ a (ipairs args)]
         (.. (. a 1) "/" (. a 2))))
-    (print (.. "x " vm.pc ": " insn.name " " (table.concat pargs ", "))))
+    (print (.. vm.tag "x " vm.pc ": " insn.name " " (table.concat pargs ", "))))
 
   (fn dispatch [insn args]
     (when vm.tracing.exec
@@ -182,15 +191,19 @@
     (when (not insn)
           (fault vm "badop" [opcode]))
     (dispatch insn (load-args insn modes))
-    (when (= oldpc vm.pc)
+    (when (and (not (stopped? vm)) (= oldpc vm.pc))
           (advance-pc insn)))
 
   vm)
 
 (fn run [vm]
-  (while (not vm.halt)
+  (tset vm :iowait false)
+  (while (not (stopped? vm))
     (step vm))
   vm)
+
+(fn tag [vm t]
+  (tset vm :tag t))
 
 (fn trace [vm modes]
   (tset vm :tracing (collect [_ m (ipairs modes)] (values m true)))
@@ -198,6 +211,7 @@
 
 {
   : copy
+  : halted?
   : hookio
   : make
   : peek
@@ -205,5 +219,7 @@
   : pushin
   : run
   : step
+  : stopped?
+  : tag
   : trace
 }

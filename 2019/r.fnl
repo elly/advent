@@ -11,6 +11,7 @@
 
 (fn check-libs []
   (check-lib :cloud)
+  (check-lib :list)
   (check-lib :point))
 
 (fn lines-from-file [name default]
