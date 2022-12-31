@@ -2,20 +2,8 @@
 
 (local ic (require :../lib/intcode))
 
-(fn solve-a [vm]
-  (let [vm (ic.copy vm)]
-    (ic.pushin vm 1)
-    (ic.run vm)
-    (. vm.outbuf (# vm.outbuf))))
-
-(fn solve-b [vm]
-  (let [vm (ic.copy vm)]
-    (ic.pushin vm 5)
-    (ic.run vm)
-    (. vm.outbuf (# vm.outbuf))))
-
 {
   :read ic.make
-  : solve-a
-  : solve-b
+  :solve-a #(ic.run-copy-with-io $1 [1])
+  :solve-b #(ic.run-copy-with-io $1 [5])
 }
