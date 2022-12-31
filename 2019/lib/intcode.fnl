@@ -31,15 +31,17 @@
   vm)
 
 (fn argload [vm [val mode]]
-  (if (= mode :imm)
-      val
-      (peek vm val)))
+  (if (= mode :imm) val
+      (= mode :pos) (peek vm val)
+      (= mode :rel) (peek vm (+ vm.relbase val))))
 
 (fn argstore [vm [val mode] v]
   (when (= mode :imm)
         (fault vm "immwrite" [val mode v]))
   (when (= mode :pos)
-        (poke vm val v)))
+        (poke vm val v))
+  (when (= mode :rel)
+        (poke vm (+ vm.relbase val) v)))
 
 (fn opbin [vm insn [arg1 arg2 arg3]]
   (let [i1 (argload vm arg1)
@@ -88,6 +90,10 @@
         1
         0)))
 
+(fn oparb [vm insn [arg]]
+  (let [r (argload vm arg)]
+    (tset vm :relbase (+ vm.relbase r))))
+
 (local *ops*
   {
     1 { :name :add :args 3 :fn opbin }
@@ -98,6 +104,7 @@
     6 { :name :jfa :args 2 :fn opjfa }
     7 { :name :clt :args 3 :fn opclt }
     8 { :name :ceq :args 3 :fn opceq }
+    9 { :name :arb :args 1 :fn oparb }
     99 { :name :hlt :args 0 :fn ophlt }
   })
 
@@ -109,6 +116,7 @@
     :outbuf []
     :mem (icollect [_ v (ipairs vm.mem)] v)
     :pc vm.pc
+    :relbase vm.relbase
     :tag ""
     :tracing (collect [k v (pairs vm.tracing)] k v)
   })
@@ -128,6 +136,7 @@
     :inbuf []
     :outbuf []
     : mem
+    :relbase 0
     :pc 0
     :tag ""
     :tracing {}
@@ -141,11 +150,14 @@
   (when outfunc (tset vm :outfunc outfunc))
   vm)
 
+(fn lastout [vm]
+  (. vm.outbuf (# vm.outbuf)))
+
 (fn pushin [vm v]
   (table.insert vm.inbuf v)
   vm)
 
-(local *modes* [:pos :imm])
+(local *modes* [:pos :imm :rel])
 
 (fn decode [opcode]
   (fn decode-modes [modes]
@@ -202,6 +214,13 @@
     (step vm))
   vm)
 
+(fn run-copy-with-io [vm ins]
+  (let [c (copy vm)]
+    (each [_ in (ipairs ins)]
+      (pushin c in))
+    (run c)
+    (lastout c)))
+
 (fn tag [vm t]
   (tset vm :tag t))
 
@@ -213,11 +232,13 @@
   : copy
   : halted?
   : hookio
+  : lastout
   : make
   : peek
   : poke
   : pushin
   : run
+  : run-copy-with-io
   : step
   : stopped?
   : tag
