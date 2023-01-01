@@ -9,7 +9,14 @@
       :vel [0 0 0]
     }))
 
-(fn step! [moons]
+(fn step [moons]
+  (local moons
+    (icollect [_ m (ipairs moons)]
+      {
+        :pos (icollect [_ d (ipairs m.pos)] d)
+        :vel (icollect [_ d (ipairs m.vel)] d)
+      }))
+
   (fn apply-gravity-axis [m o a]
     (let [mp (. m.pos a) op (. o.pos a) mv (. m.vel a)]
       (if (> mp op) (- mv 1)
@@ -36,9 +43,10 @@
 
   moons)
 
-(fn step-n! [moons n]
+(fn step-n [moons n]
+  (var moons moons)
   (for [i 1 n 1]
-    (step! moons))
+    (set moons (step moons)))
   moons)
 
 (fn energy [moons]
@@ -52,10 +60,12 @@
     (+ s (* (potential-energy m) (kinetic-energy m)))))
 
 (fn solve-a [moons]
-  (step-n! moons 1000)
-  (energy moons))
+  (energy (step-n moons 1000)))
+
+(fn solve-b [moons] 0)
 
 {
   : read
   : solve-a
+  : solve-b
 }
