@@ -121,7 +121,7 @@
         rz (recur (slice moons 3))]
     ; Argh. The result is slightly too big for Lua, so this produces a double
     ; that is close to the correct number instead of an exact result. Hmph.
-    (lcm rx ry rz)))
+    (string.format "%d" (lcm rx ry rz))))
 
 {
   : read

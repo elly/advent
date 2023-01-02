@@ -178,6 +178,12 @@
 (fn stopped? [vm]
   (or vm.halt vm.iowait))
 
+(local *sigils* {
+  :imm "$"
+  :pos "."
+  :rel "~"
+})
+
 (fn step [vm]
   (fn load-args [insn modes]
     (fcollect [i 1 insn.args 1]
@@ -186,10 +192,13 @@
   (fn advance-pc [insn]
     (tset vm :pc (+ vm.pc insn.args 1)))
 
+  (fn trace-arg [[val mode]]
+    (.. (. *sigils* mode) val))
+
   (fn trace [insn args]
     (local pargs
       (icollect [_ a (ipairs args)]
-        (.. (. a 1) "/" (. a 2))))
+        (trace-arg a)))
     (print (.. vm.tag "x " vm.pc ": " insn.name " " (table.concat pargs ", "))))
 
   (fn dispatch [insn args]
