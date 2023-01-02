@@ -57,12 +57,14 @@
           (add! n p (f (get c0 p) (get c1 p)))))
   n)
 
-(fn of [pts d]
-  (local d (or d true))
+(fn of [pts f]
   (var n (make))
   (each [_ p (ipairs pts)]
-    (add! n p true))
+    (add! n p (if f (f p) true)))
   n)
+
+(fn copy [c]
+  (of (all c) #(get c $1)))
 
 (fn check []
   (let [p (of [[1 2 3] [4 5 6]])
@@ -75,6 +77,7 @@
   : add!
   : all
   : check
+  : copy
   : get
   : has
   : intersect
