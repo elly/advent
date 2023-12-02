@@ -58,6 +58,5 @@ fn partb(lines: &[&str]) -> u32 {
 
 pub fn solve(input: &str) -> (String, String) {
     let lines: Vec<&str> = input.split('\n').collect();
-    (String::from(parta(&lines[..]).to_string()),
-     String::from(partb(&lines[..]).to_string()))
+    (parta(&lines[..]).to_string(), partb(&lines[..]).to_string())
 }

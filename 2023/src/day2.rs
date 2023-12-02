@@ -83,6 +83,5 @@ fn partb(games: &[Game]) -> u32 {
 
 pub fn solve(input: &str) -> (String, String) {
     let games = parse(input);
-    (String::from(parta(&games[..]).to_string()),
-     String::from(partb(&games[..]).to_string()))
+    (parta(&games[..]).to_string(), partb(&games[..]).to_string())
 }
