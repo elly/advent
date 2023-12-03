@@ -4,12 +4,14 @@ use std::io::{self, Read};
 mod day0;
 mod day1;
 mod day2;
+mod day3;
 
 type SolveFn = fn(&str) -> (String, String);
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    let days: Vec<SolveFn> = vec![day0::solve, day1::solve, day2::solve];
+    let days: Vec<SolveFn> = vec![day0::solve, day1::solve, day2::solve,
+                                  day3::solve];
 
     if args.len() < 2 {
         panic!("Usage: <day number>");

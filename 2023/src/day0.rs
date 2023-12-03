@@ -37,6 +37,5 @@ fn partb(input: &str) -> i32 {
 }
 
 pub fn solve(input: &str) -> (String, String) {
-    (String::from(parta(input).to_string()),
-     String::from(partb(input).to_string()))
+    (parta(input).to_string(), partb(input).to_string())
 }
