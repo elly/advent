@@ -53,9 +53,9 @@ fn parta(cards: &[Card]) -> u32 {
 }
 
 fn partb(cards: &[Card]) -> u32 {
-    // For part b, each card has a number of copies (its multiplier); double the
-    // multiplier of a number of cards below it in the list equal to its number
-    // of wins.
+    // For part b, each card has a number of copies (its multiplier); for each
+    // card ci with w wins, increase the count of the cards from ci+1 .. ci+w by
+    // the count of card ci.
     let mut counts: Vec<usize> = Vec::new();
     counts.resize(cards.len(), 1);
     for ci in 0 .. cards.len() {
