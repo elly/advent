@@ -37,7 +37,7 @@ fn parse_card(c: char) -> Card {
 
 fn parse_hand(line: &str) -> Hand {
     let parts: Vec<_> = line.split(' ').collect();
-    let mut cards: Vec<_> = parts[0].chars().map(parse_card).collect();
+    let cards: Vec<_> = parts[0].chars().map(parse_card).collect();
     let bid = parts[1].parse::<u64>().unwrap();
 
     Hand { cards, bid }
