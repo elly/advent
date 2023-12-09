@@ -1,6 +1,5 @@
 // Day 8:
 
-use num::integer;
 use std::collections::HashMap;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -84,7 +83,7 @@ fn parta(graph: &Graph) -> u64 {
 
 fn partb(graph: &Graph) -> u64 {
     let mut starts = Vec::new();
-    graph.nodes.iter().for_each(|(k, v)| {
+    graph.nodes.iter().for_each(|(k, _v)| {
         if k.ends_with("A") {
             starts.push(k.as_str());
         }
