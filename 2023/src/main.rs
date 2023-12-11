@@ -12,6 +12,7 @@ mod day7;
 mod day8;
 mod day9;
 mod day10;
+mod day11;
 
 type SolveFn = fn(&str) -> (String, String);
 
@@ -20,7 +21,7 @@ fn main() {
     let days: Vec<SolveFn> = vec![day0::solve, day1::solve, day2::solve,
                                   day3::solve, day4::solve, day5::solve,
                                   day6::solve, day7::solve, day8::solve,
-                                  day9::solve, day10::solve];
+                                  day9::solve, day10::solve, day11::solve];
 
     if args.len() < 2 {
         panic!("Usage: <day number>");
