@@ -73,9 +73,14 @@ fn swaphead(tiles: &[Tile], tile: Tile) -> Vec<Tile> {
     ts
 }
 
-type SolnCache = HashMap<(Vec<Tile>, Vec<usize>), usize>;
+type SolnCache = HashMap<(Vec<Tile>, Vec<usize>, bool), usize>;
 
-fn solns(tiles: &[Tile], runs: &[usize], inrun: bool) -> usize {
+fn solns(tiles: &[Tile], runs: &[usize], inrun: bool, cache: &mut SolnCache) -> usize {
+    let hk = (tiles.to_vec(), runs.to_vec(), inrun);
+    if cache.contains_key(&hk) {
+        return *cache.get(&hk).unwrap();
+    }
+
     // The recursive solution! Base cases:
     // 1) If both vectors are empty, we won - there's 1 solution.
     // 2) If tiles is empty but runs isn't, we didn't assign all the springs -
@@ -103,20 +108,24 @@ fn solns(tiles: &[Tile], runs: &[usize], inrun: bool) -> usize {
 
     let t = tiles[0];
     let r = runs.get(0).unwrap_or(&0);
-    match (t, r, inrun) {
+    let res = match (t, r, inrun) {
         (Tile::Spring, 0, _) => 0,
-        (Tile::Spring, _, _) => solns(&tiles[1..], &decrun(runs), true),
-        (Tile::Empty, 0, _) => solns(&tiles[1..], poprun(runs), false),
+        (Tile::Spring, _, _) => solns(&tiles[1..], &decrun(runs), true, cache),
+        (Tile::Empty, 0, _) => solns(&tiles[1..], poprun(runs), false, cache),
         (Tile::Empty, _, true) => 0,
-        (Tile::Empty, _, false) => solns(&tiles[1..], runs, false),
+        (Tile::Empty, _, false) => solns(&tiles[1..], runs, false, cache),
         (Tile::Unknown, _, _) =>
-            solns(&swaphead(tiles, Tile::Spring), runs, inrun) +
-            solns(&swaphead(tiles, Tile::Empty), runs, inrun),
-    }
+            solns(&swaphead(tiles, Tile::Spring), runs, inrun, cache) +
+            solns(&swaphead(tiles, Tile::Empty), runs, inrun, cache),
+    };
+
+    cache.insert(hk, res);
+    res
 }
 
 fn parta(lines: &[Line]) -> usize {
-    lines.iter().map(|line| solns(&line.tiles, &line.runs, false)).sum()
+    let mut cache = HashMap::new();
+    lines.iter().map(|line| solns(&line.tiles, &line.runs, false, &mut cache)).sum()
 }
 
 fn unfold(line: &Line) -> Line {
@@ -132,7 +141,8 @@ fn unfold(line: &Line) -> Line {
 }
 
 fn partb(lines: &[Line]) -> usize {
-    lines.iter().map(|line| dbg!(solns(&line.tiles, &line.runs, false))).sum()
+    let mut cache = HashMap::new();
+    lines.iter().map(|line| solns(&line.tiles, &line.runs, false, &mut cache)).sum()
 }
 
 pub fn solve(input: &str) -> (String, String) {
@@ -143,19 +153,17 @@ pub fn solve(input: &str) -> (String, String) {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
+
     fn t(input: &str) -> usize {
         let line = crate::day12::parse_line(input);
-        crate::day12::solns(&line.tiles, &line.runs, false)
-    }
-
-    fn e(input: &str) -> crate::day12::Line {
-        crate::day12::unfold(&crate::day12::parse_line(input))
+        crate::day12::solns(&line.tiles, &line.runs, false, &mut HashMap::new())
     }
 
     fn te(input: &str) -> usize {
         let line = crate::day12::parse_line(input);
         let line = crate::day12::unfold(&line);
-        crate::day12::solns(&line.tiles, &line.runs, false)
+        crate::day12::solns(&line.tiles, &line.runs, false, &mut HashMap::new())
     }
 
     #[test]
