@@ -59,14 +59,6 @@ fn parse_tile(c: char) -> Tile {
     }
 }
 
-fn unparse_tile(t: Tile) -> char {
-    match t {
-        Tile::Round => 'O',
-        Tile::Cube => '#',
-        Tile::Space => '.',
-    }
-}
-
 fn parse(input: &str) -> Map {
     let mut tiles = Vec::new();
     let mut width = 0;
@@ -111,16 +103,6 @@ fn tilt(m: &mut Map, dy: i32, dx: i32) {
             }
         }
     }
-}
-
-fn raster(map: &Map) {
-    for y in 0 .. map.height {
-        for x in 0 .. map.width {
-            print!("{}", unparse_tile(map.tiles[y][x]));
-        }
-        println!("");
-    }
-    println!("");
 }
 
 fn spin(m: &mut Map) {
@@ -168,7 +150,7 @@ fn spin_period(map: &Map) -> (usize, usize) {
 
 fn spin_times(map: &Map, n: usize) -> Map {
     let mut map = map.clone();
-    for i in 0 .. n {
+    for _ in 0 .. n {
         spin(&mut map);
     }
     map
