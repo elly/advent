@@ -11,6 +11,8 @@
 
 use std::collections::VecDeque;
 
+use crate::map2d;
+
 #[derive(Clone, Copy, Eq, PartialEq)]
 enum Tile {
     Space,
@@ -56,7 +58,7 @@ impl Tile {
     }
 }
 
-type Map = Vec<Vec<Tile>>;
+type Map = map2d::Map2d<Tile>;
 
 struct Point(i32, i32);
 
@@ -74,33 +76,26 @@ impl Point {
 struct Beam(Point, Dir);
 
 fn parse(input: &str) -> Map {
-    let mut map = Vec::new();
-    for line in input.split('\n').filter(|x| !x.is_empty()) {
-        let mut row = Vec::new();
-        for cell in line.chars() {
-            row.push(
-                match cell {
-                    '.'  => Tile::Space,
-                    '\\' => Tile::MirWE,
-                    '/'  => Tile::MirEW,
-                    '|'  => Tile::SplitNS,
-                    '-'  => Tile::SplitEW,
-                    _    => panic!("bogus tile {}", cell),
-                }
-            );
+    map2d::Map2d::from_str(input,
+        |cell| match cell {
+            '.'  => Tile::Space,
+            '\\' => Tile::MirWE,
+            '/'  => Tile::MirEW,
+            '|'  => Tile::SplitNS,
+            '-'  => Tile::SplitEW,
+            _    => panic!("bogus tile {}", cell),
         }
-        map.push(row);
-    }
-    map
+    )
 }
 
 fn zap(map: &Map, start: Beam) -> usize {
+    // TODO: use Map2d for zm and vm
     let mut zm = Vec::new();
     let mut vm = Vec::new();
-    for y in 0 .. map.len() {
+    for _ in 0 .. map.height {
         let mut z = Vec::new();
         let mut v = Vec::new();
-        for _ in 0 .. map[y].len() {
+        for _ in 0 .. map.width {
             z.push(0);
             let mut tm = Vec::new();
             for _ in 0 .. 4 {
@@ -115,12 +110,9 @@ fn zap(map: &Map, start: Beam) -> usize {
     let mut zq = VecDeque::new(); 
     zq.push_back(start);
 
-    let h = map.len() as i32;
-    let w = map[0].len() as i32;
-
     while !zq.is_empty() {
         let Beam(p, d) = zq.pop_front().unwrap();
-        if p.0 < 0 || p.0 >= w || p.1 < 0 || p.1 >= h {
+        if !map.inbounds(p.1, p.0) {
             continue;
         }
         if vm[p.1 as usize][p.0 as usize][d as usize] {
@@ -128,7 +120,7 @@ fn zap(map: &Map, start: Beam) -> usize {
         }
         zm[p.1 as usize][p.0 as usize] += 1;
         vm[p.1 as usize][p.0 as usize][d as usize] = true;
-        let (a, b) = map[p.1 as usize][p.0 as usize].step(&d);
+        let (a, b) = map.at(p.1, p.0).step(&d);
         zq.push_back(Beam(p.moveby(&a), a));
         if let Some(b) = b {
             zq.push_back(Beam(p.moveby(&b), b));
@@ -150,28 +142,28 @@ fn parta(map: &Map) -> usize {
 
 fn partb(map: &Map) -> usize {
     let mut best = 0;
-    for y in 0 .. map.len() {
+    for y in 0 .. map.height {
         let y = y as i32;
         let v = zap(&map, Beam(Point(0, y), Dir::East));
         if v > best {
             best = v;
         }
 
-        let x = (map[0].len() - 1) as i32;
+        let x = (map.width - 1) as i32;
         let v = zap(&map, Beam(Point(x, y), Dir::West));
         if v > best {
             best = v;
         }
     }
 
-    for x in 0 .. map[0].len() {
+    for x in 0 .. map.width {
         let x = x as i32;
         let v = zap(&map, Beam(Point(x, 0), Dir::South));
         if v > best {
             best = v;
         }
 
-        let y = (map.len() - 1) as i32;
+        let y = (map.height - 1) as i32;
         let v = zap(&map, Beam(Point(x, y), Dir::North));
         if v > best {
             best = v;
