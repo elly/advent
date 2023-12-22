@@ -8,6 +8,60 @@
 //
 // How would we find a rectangle? Every corner has to be the corner of a
 // rectangle, since the whole diagram is a single loop... time to ponder.
+//
+// Here's an idea: the resulting shape is the union of a collection of
+// rectangles, and if we could figure out where those rectangles are, we could
+// compute the total area they should occupy. To do that, we can identify
+// outermost edges and find the edges connected to them; once we have three
+// connected edges, we can use them to define a rectangle, remove the three
+// edges, and splice a new edge in where the rectangle was. Here's an example:
+//
+//          #######
+//          #.....#
+//   ########.....#
+//   #............#
+//   #............221
+//   ###............1
+//     #............1
+//     #............1
+//     #####...###221
+//         #...#
+//         #####
+//
+// We can pick an outermost edge (marked with 1s) then walk along both its
+// perpendicular edges until one of them turns. There is now a rectangle defined
+// by those three edges, and we can remove it and add its fourth edge to the
+// shape, producing this:
+//
+//          1111111
+//          2.....2
+//   #######2.....2
+//   #............#
+//   #............#
+//   ###..........#
+//     #..........#
+//     #..........#
+//     #####...####
+//         #...#
+//         #####
+// And repeat:
+//   ##############
+//   #............#
+//   #............#
+//   ###..........#
+//     #..........#
+//     #..........#
+//     #####...####
+//         #...#
+//         #####
+// And repeat continuously, summing the sizes of the rectangles we removed,
+// until we run out of rectangles. That seems like it should work.
+//
+// How do we implement that? It seems like we can keep a list of all the edges
+// in the order they appear (which will be easy to produce from the input), then
+// gradually remove stuff from that list. We won't actually need many cases, on
+// further reflection, since we can always just take the topmost edge and go
+// from there...? Does that always work?
 
 use crate::map2d::{Dir2d, Map2d, Point2d};
 use std::collections::HashMap;
