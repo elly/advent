@@ -62,7 +62,28 @@
 // gradually remove stuff from that list. We won't actually need many cases, on
 // further reflection, since we can always just take the topmost edge and go
 // from there...? Does that always work?
-
+//
+// What about this though:
+//
+// 1######2
+// #......#
+// 0#####.*
+//      #.#
+//      #.3###
+// for that we need a new point at *. For this:
+//
+// 1########2
+// #........3##
+// 0#######....
+//        #....
+// The big problem is, how do we ensure we're accounting for all the space? For
+// a case like the above one, we have to include all the edges (so we don't
+// forget them) but not double-count any tiles. It seems like to get that to
+// work we'd have to subtract out the area we're leaving behind from the area of
+// the rectangle - but that seems like it'd require some case analysis on how
+// the rectangle is attached to the larger shape? Yuck.
+//
+// That whole approach seems like it won't work. Rats.
 use crate::map2d::{Dir2d, Point2d};
 use std::cmp;
 use std::mem;
