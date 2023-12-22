@@ -20,6 +20,7 @@ mod day15;
 mod day16;
 mod day17;
 mod day18;
+mod day19;
 
 mod map2d;
 
@@ -33,7 +34,7 @@ fn main() {
                                   day9::solve,  day10::solve, day11::solve,
                                   day12::solve, day13::solve, day14::solve,
                                   day15::solve, day16::solve, day17::solve,
-                                  day18::solve];
+                                  day18::solve, day19::solve];
 
     if args.len() < 2 {
         panic!("Usage: <day number>");
