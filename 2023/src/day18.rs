@@ -116,11 +116,11 @@
 //
 // I'm super stuck on this problem. I'm gonna put it aside for now and come back
 // to it.
-use crate::map2d::{Dir2d, Point2d};
+use crate::map2d::{Dir2d};
 
 type Step = (Dir2d, i32);
-type Shape = Vec<Point2d>;
 
+#[allow(dead_code)]
 fn parse_step(input: &str, flip: bool) -> Step {
     let parts: Vec<_> = input.split(' ').collect();
     if flip {
@@ -149,7 +149,7 @@ fn parse_step(input: &str, flip: bool) -> Step {
     }
 }
 
-pub fn solve(input: &str) -> (String, String) {
+pub fn solve(_input: &str) -> (String, String) {
     ("".to_string(), "".to_string())
 }
 
