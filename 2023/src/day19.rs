@@ -89,11 +89,6 @@ impl PartRange {
         (self.s.1 + 1 - self.s.0) as usize
     }
 
-    fn empty(&self) -> bool {
-        self.x.1 < self.x.0 || self.m.1 < self.m.0
-        || self.a.1 < self.a.0 || self.s.1 < self.s.0
-    }
-
     fn field(&self, f: Field) -> (u32, u32) {
         match f {
             Field::X => self.x,

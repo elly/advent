@@ -74,7 +74,7 @@
 //
 // 1########2
 // #........3##
-// 0#######....
+// 0#######.*..
 //        #....
 // The big problem is, how do we ensure we're accounting for all the space? For
 // a case like the above one, we have to include all the edges (so we don't
@@ -84,9 +84,39 @@
 // the rectangle is attached to the larger shape? Yuck.
 //
 // That whole approach seems like it won't work. Rats.
+//
+// New approach idea: what if we scanned down the shape line by line? The y
+// coordinates probably range across like, 0 - 2**24 or so (say), so what if for
+// each y coordinate, we had a notion of which ranges lie inside the shape? The
+// left edge of the range is always outside the shape, and crossing a vertical
+// line puts you inside it - but what about horizontal lines? are you inside or
+// outside afterwards?
+//
+// We'd also need to keep track of ranges that are inside the shape as we go
+// row-by-row, and you're only inside if you are inside for both. So for
+// example, let's say we have this shape:
+//
+//   ####      
+//   #  #      ###
+//   #  #      # #
+//   ## ######## #
+//    #    ##    #
+//    ###     ####
+//      #######
+// I think it's not that straightforward. Hm. When we're walking down the walls,
+// we lose track of whether we're inside or outside. :(
+//
+// I went and did some reading and learned about the Shoelace Formula:
+// https://en.wikipedia.org/wiki/Shoelace_formula - maybe I can use this, even
+// though it's a bit too general. Maybe this will work? I'm worried about how to
+// handle the thickness of the lines though - to have a line that encompasses
+// the shape, we'd have to outset *some* of the coordinates - the ones that are
+// like, on the "inside" of the shape - to account for the extra space on those
+// edges.
+//
+// I'm super stuck on this problem. I'm gonna put it aside for now and come back
+// to it.
 use crate::map2d::{Dir2d, Point2d};
-use std::cmp;
-use std::mem;
 
 type Step = (Dir2d, i32);
 type Shape = Vec<Point2d>;
@@ -119,121 +149,8 @@ fn parse_step(input: &str, flip: bool) -> Step {
     }
 }
 
-fn parse(input: &str, flip: bool) -> Shape {
-    let mut p = Point2d { x: 0, y: 0 };
-    let mut r = Vec::new();
-    // XXX: avoid duplicating the start/end point
-    // r.push(p);
-    for step in input.split('\n').filter(|x| !x.is_empty()) {
-        let (dir, dist) = parse_step(step, flip);
-        p = p.movebyn(dir, dist);
-        r.push(p);
-    }
-
-    r
-}
-
-// Returns the index of the leading point (in path order) of the northernmost
-// edge in the shape.
-fn northmost(shape: &Shape) -> Option<usize> {
-    let mut best: Option<usize> = None;
-
-    for i in 0 .. shape.len() {
-        if let Some(bp) = best {
-            if shape[bp].y > shape[i].y {
-                best = Some(i);
-            }
-        } else {
-            best = Some(i);
-        }
-    }
-
-    best
-}
-
-fn validate(s: &Shape) {
-    let mut was_v = s[0].x == s[s.len() - 1].x;
-    for i in 0 .. s.len() - 2 {
-        let is_v = s[i].x == s[i + 1].x;
-        let is_h = s[i].y == s[i + 1].y;
-        assert!(is_h ^ is_v);
-        assert!(was_v == is_h);
-        was_v = !was_v;
-    }
-}
-
-fn carve(s: &Shape) -> (Shape, usize) {
-    validate(&s);
-
-    let nm = northmost(s).unwrap();
-    assert!(s.len() >= 4);
-    // TODO: nasty special case for nm == 0 (like in test input)
-    let (mut p0, mut p1, mut p2, mut p3) = (s[nm - 1], s[nm], s[nm + 1], s[nm + 2]);
-    let mut pts = Vec::new();
-
-    // If the path is counterclockwise here, flip the order of the points around
-    // so they're clockwise:
-    if p0.x > p3.x {
-        mem::swap(&mut p0, &mut p3);
-        mem::swap(&mut p1, &mut p2);
-    }
-
-    if p0.y > p3.y {
-        // If the lead leg is shorter than the tail leg, we need to leave some
-        // of the lead leg behind:
-        //     ####
-        //     #..#
-        //     #..#
-        //     #..####
-        //     #......
-        // becomes:
-        //     #######
-        //     #......
-        pts.push(Point2d { x: p0.x, y: p3.y });
-    } else if p0.y < p3.y {
-        // And if the lead leg is shorter than the tail leg:
-        //         ####
-        //     #####..#
-        //     #......#
-        // becomes:
-        //     ########
-        //     #......#
-        pts.push(Point2d { x: p3.x, y: p0.y });
-    } else {
-        // Both legs are equal! Just remove all four points.
-    }
-
-    dbg!(p0, p1, p2, p3, &pts);
-
-    let dx = (p2.x - p1.x) as usize;
-    let dy = (cmp::min(p0.y, p3.y) - p1.y) as usize;
-
-    dbg!(&s);
-
-    let mut c = s.clone();
-    let _: Vec<_> = c.splice(nm - 1 .. nm + 3, pts).collect();
-    dbg!(&c);
-    validate(&c);
-    (c, dx * dy)
-}
-
-fn recarve(s: &Shape) -> usize {
-    let mut s = s.clone();
-    let mut t = 0;
-    while !s.is_empty() {
-        let (ns, dt) = carve(&s);
-        s = ns;
-        t += dt;
-        dbg!(t);
-    }
-    t
-}
-
 pub fn solve(input: &str) -> (String, String) {
-    let plana = parse(input, false);
-    let planb = parse(input, true);
-    dbg!(northmost(&plana));
-    (recarve(&plana).to_string(), "".to_string())
+    ("".to_string(), "".to_string())
 }
 
 #[test]
@@ -245,35 +162,4 @@ fn test_parse() {
     let (dir, dist) = parse_step("R 6 (#70c710)", true);
     assert_eq!(dir, Dir2d::East);
     assert_eq!(dist, 461937);
-}
-
-#[test]
-fn test_carve1() {
-    let mut s = vec![
-        Point2d { x: 6, y: 0 },
-        Point2d { x: 6, y: 5 },
-        Point2d { x: 4, y: 5 },
-        Point2d { x: 4, y: 7 },
-        Point2d { x: 6, y: 7 },
-        Point2d { x: 6, y: 9 },
-        Point2d { x: 1, y: 9 },
-        Point2d { x: 1, y: 7 },
-        Point2d { x: 0, y: 7 },
-        Point2d { x: 0, y: 5 },
-        Point2d { x: 2, y: 5 },
-        Point2d { x: 2, y: 2 },
-        Point2d { x: 0, y: 2 },
-        Point2d { x: 0, y: 0 },
-    ];
-    s.rotate_right(3);
-    // Find: (2, 2) - (0, 2), (0, 0), (6, 0), (6, 5) - (4, 5)
-    // Need: (2, 2) - (4, 2) - (4, 5)
-    //
-    //   1######2
-    //   #......#
-    //   #......#
-    //   0###...#
-    //      *...3     <--- we need the spliced point to be at *
-    //                TODO TODO TODO
-    let (c, d) = carve(&s);
 }

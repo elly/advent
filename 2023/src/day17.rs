@@ -122,7 +122,7 @@ fn dosolve(map: &Map, min: u8, max: u8) -> usize {
     };
     let end = map.bottomright();
     let r = dijkstra::dijkstra(&start, |n| n.neighbors(min, max), |n| n.loc == end);
-    if let Some((p, c)) = r {
+    if let Some((_, c)) = r {
         c
     } else {
         0
