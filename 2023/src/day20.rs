@@ -1,13 +1,12 @@
 // Day 20: Pulse Propagation
 
-use std::collections::HashMap;
+use std::collections::{HashMap,VecDeque};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum ModKind {
     FlipFlop,
     Conj,
     Broadcast,
-    Dummy,
 }
 
 #[derive(Clone, Debug)]
@@ -15,7 +14,6 @@ struct Module {
     kind: ModKind,
     name: String,
     outs: Vec<String>,
-    ins: Vec<String>,
 }
 
 fn parse_mod(input: &str) -> Module {
@@ -34,25 +32,14 @@ fn parse_mod(input: &str) -> Module {
         kind,
         name: String::from(name),
         outs: outs.iter().map(|x| String::from(*x)).collect(),
-        ins: Vec::new(),
     }
 }
 
 fn parse(input: &str) -> HashMap<String, Module> {
-    let mut tr = HashMap::new();
+    let mut r = HashMap::new();
     for line in input.split('\n').filter(|x| !x.is_empty()) {
         let m = parse_mod(line);
-        tr.insert(m.name.clone(), m);
-    }
-
-    // Compute all the inputs for each module and fill those in too.
-    let mut r = tr.clone();
-    for (k, v) in tr.iter() {
-        for i in v.outs.iter() {
-            if let Some(m) = r.get_mut(i) {
-                m.ins.push(k.clone());
-            }
-        }
+        r.insert(m.name.clone(), m);
     }
 
     r
@@ -66,163 +53,97 @@ type Circuit = HashMap<String, Module>;
 // of module states.
 #[derive(Clone, Debug)]
 struct ModState {
-    // The last input received for each wired input, or None if no input was
-    // received from this module this cycle.
-    inputs: Vec<Option<bool>>,
-
     // The last input (defaulting to off) received for each one of this module's
-    // wired inputs. This vector's length is equal to the corresponding module's
-    // number of connected inputs.
-    last_inputs: Vec<bool>,
+    // wired inputs.
+    last_inputs: HashMap<String, bool>,
 
     // For flipflops only, whether the module is on or off.
     onoff: bool,
-
-    // Last output, if there was one.
-    out: Option<bool>,
-
-    // Number of button presses left, if this is a broadcast module. Grim hack.
-    presses: usize,
 }
 
-type CircuitState = HashMap<String, ModState>;
-
-fn new_circuitstate(circuit: &Circuit) -> CircuitState {
+fn new_modstates(circuit: &Circuit) -> HashMap<String, ModState> {
     let mut r = HashMap::new();
-
     for (k, v) in circuit.iter() {
-        let len = v.ins.len();
-
-        let mut inputs = Vec::new();
-        inputs.resize(len, None);
-
-        let mut last_inputs = Vec::new();
-        last_inputs.resize(len, false);
-
-        r.insert(k.clone(), ModState {
-            inputs,
-            last_inputs,
-            onoff: false,
-            out: None,
-            presses: 0,
-        });
+        let mut last_inputs = HashMap::new();
+        for (ik, iv) in circuit.iter() {
+            if iv.outs.contains(k) {
+                last_inputs.insert(ik.clone(), false);
+            }
+        }
+        r.insert(k.clone(), ModState { last_inputs, onoff: false });
     }
-
     r
 }
 
-fn step_conj(s: &ModState) -> ModState {
-    let has_input = s.inputs.iter().any(|x| x.is_some());
-    let out = if has_input {
-        Some(!s.last_inputs.iter().all(|i| *i))
+fn sim_mod(src: &str, dm: &Module, ds: &mut ModState, pulse: bool) ->
+Option<bool> {
+    if dm.kind == ModKind::Conj {
+        ds.last_inputs.insert(src.to_string(), pulse);
+        Some(!ds.last_inputs.values().all(|k| *k))
+    } else if dm.kind == ModKind::FlipFlop {
+        if !pulse {
+            ds.onoff = !ds.onoff;
+            Some(ds.onoff)
+        } else {
+            None
+        }
+    } else if dm.kind == ModKind::Broadcast {
+        Some(pulse)
     } else {
         None
-    };
-    ModState {
-        out, .. s.clone()
     }
 }
 
-fn step_flip(s: &ModState) -> ModState {
-    let has_low = s.inputs.iter().any(|x| x.is_some() && !x.unwrap());
-    let onoff = if has_low { !s.onoff } else { s.onoff };
-    let out = if has_low { Some(onoff) } else { None };
-    ModState {
-        onoff,
-        out,
-        .. s.clone()
-    }
-}
+fn sim(circuit: &Circuit, presses: usize, target: &str) -> (usize, usize, usize) {
+    let mut states: HashMap<String, ModState> = new_modstates(circuit);
+    let (mut highs, mut lows) = (0, 0);
 
-fn step_special(s: &ModState) -> ModState {
-    ModState {
-        out: if s.presses > 0 { Some(false) } else { None },
-        presses: if s.presses > 0 { s.presses - 1 } else { 0 },
-        .. s.clone()
-    }
-}
+    for press in 0 .. presses {
+        let mut q = VecDeque::new();
+        q.push_back(("button", "broadcaster", false));
+        while !q.is_empty() {
+            let Some((src, dst, pulse)) = q.pop_front() else { panic!("...") };
+            let dm = circuit.get(dst);
 
-fn step(circuit: &Circuit, states: CircuitState) -> CircuitState {
-    let mut r = HashMap::new();
-    // To simulate the circuit we make two passes; the first pass fills each
-    // module's inputs and last_inputs fields from its wired inputs, and the
-    // second pass computes its new output state.
-
-    for (k, v) in circuit.iter() {
-        let ms = states.get(k).unwrap();
-        let ins: Vec<Option<bool>> = v.ins.iter().map(|m| {
-            states.get(m).unwrap().out
-        }).collect();
-        let mut ir = Vec::new();
-        let mut lir = Vec::new();
-        for i in 0 .. ins.len() {
-            ir.push(ins[i]);
-            if let Some(iv) = ins[i] {
-                lir.push(iv);
+            if pulse {
+                highs += 1;
             } else {
-                lir.push(ms.last_inputs[i]);
+                lows += 1;
             }
-        }
 
-        let s = ModState {
-            inputs: ir,
-            last_inputs: lir,
-            .. ms.clone()
-        };
+            if src == target && pulse {
+                return (highs, lows, press + 1);
+            }
 
-        let s = match v.kind {
-            ModKind::Conj => step_conj(&s),
-            ModKind::FlipFlop => step_flip(&s),
-            ModKind::Broadcast => step_special(&s),
-            ModKind::Dummy => s.clone(),
-        };
-
-        r.insert(k.clone(), s);
-    }
-
-    r
-}
-
-fn run(circuit: &Circuit, states: CircuitState, presses: usize) -> (usize, usize) {
-    let (mut h, mut l) = (0, 0);
-    let mut th = 0;
-    let mut tl = 0;
-    let mut presses = presses;
-    let mut states = states;
-    while h > 0 || l > 0 || presses > 0 {
-        if h == 0 && l == 0 && presses > 0 {
-            let mut s = states.get_mut(&String::from("broadcaster")).unwrap();
-            s.presses = 1;
-            presses -= 1;
-            tl += 1;
-        }
-
-        h = 0;
-        l = 0;
-
-
-        states = step(circuit, states);
-        for (k, v) in states.iter() {
-            let outs = circuit.get(k).unwrap().outs.len();
-            if let Some(s) = v.out {
-                if s {
-                    h += outs;
-                } else {
-                    l += outs;
+            if let Some(dm) = dm {
+                let mut ds = states.get_mut(dst).unwrap();
+                let p = sim_mod(src, dm, &mut ds, pulse);
+                if let Some(p) = p {
+                    for o in dm.outs.iter() {
+                        q.push_back((dst, &o, p));
+                    }
                 }
+            } else {
+//              dbg!((src, dst, pulse));
             }
         }
-        th += h;
-        tl += l;
     }
-    (th, tl)
+
+    (highs, lows, 0)
 }
 
-// 720502125 is too low
+fn partb(circuit: &Circuit) -> usize {
+    // This is hardcoded off my input - a bit gross.
+    // TODO: generalize?
+    let (_, _, rsx) = sim(circuit, 10000000, "sx");
+    let (_, _, rjt) = sim(circuit, 10000000, "jt");
+    let (_, _, rkb) = sim(circuit, 10000000, "kb");
+    let (_, _, rks) = sim(circuit, 10000000, "ks");
+    rsx * rjt * rkb * rks
+}
 
 pub fn solve(input: &str) -> (String, String) {
     let circuit = parse(input);
-    let mut cs = new_circuitstate(&circuit);
-    let (h, l) = run(&circuit, cs, 1000);
-    ((h * l).to_string(), "".to_string())
+    let (h, l, _) = sim(&circuit, 1000, "");
+    ((h * l).to_string(), partb(&circuit).to_string())
 }
