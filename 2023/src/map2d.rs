@@ -69,22 +69,6 @@ impl<T: Clone> Map2d<T> {
         Map2d { cells, width, height }
     }
 
-    pub fn copied(&self, times: usize) -> Map2d<T> {
-        let mut cells = Vec::new();
-        for y in 0 .. self.height * times {
-            let mut row = Vec::new();
-            for x in 0 .. self.width * times {
-                row.push(self.cells[y % self.height][x % self.width].clone());
-            }
-            cells.push(row);
-        }
-
-        let width = self.width * times;
-        let height = self.height * times;
-
-        Map2d { cells, width, height }
-    }
-
     pub fn at(&self, y: i32, x: i32) -> &T {
         assert!(y >= 0);
         assert!(x >= 0);
@@ -93,10 +77,6 @@ impl<T: Clone> Map2d<T> {
 
     pub fn atp(&self, p: Point2d) -> &T {
         self.at(p.y, p.x)
-    }
-
-    pub fn put(&mut self, p: Point2d, t: T) {
-        self.cells[p.y as usize][p.x as usize] = t;
     }
 
     pub fn inbounds(&self, y: i32, x: i32) -> bool {

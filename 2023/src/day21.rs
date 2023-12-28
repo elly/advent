@@ -140,6 +140,9 @@ fn partb(map: &Map) -> usize {
     let mut t = reachn(&fromstart, STEPS);
     // dbg!(t);
 
+    let mut odds = 1;
+    let mut evens = 0;
+
     for (p,bp) in pts {
         let b = fromstart.get(&bp).unwrap();
         let fm = flood(map, p);
@@ -161,6 +164,7 @@ fn partb(map: &Map) -> usize {
 
         while left >= fd {
             let mt = if left % 2 == 0 { reache } else { reacho };
+            if left % 2 == 0 { evens += mul; } else { odds += mul; }
             // dbg!(mt, mul);
             t += mt * mul;
             mul += 1;
@@ -210,6 +214,7 @@ fn partb(map: &Map) -> usize {
 
         while left >= fd {
             let mt = if left % 2 == 0 { reache } else { reacho };
+            if left % 2 == 0 { evens += 1; } else { odds += 1; }
             // dbg!(mt);
             t += mt;
             left -= stride;
@@ -219,6 +224,8 @@ fn partb(map: &Map) -> usize {
         // dbg!(mt);
         t += mt;
     }
+
+    dbg!(odds, evens);
 
     t
 }
