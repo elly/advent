@@ -69,6 +69,22 @@ impl<T: Clone> Map2d<T> {
         Map2d { cells, width, height }
     }
 
+    pub fn copied(&self, times: usize) -> Map2d<T> {
+        let mut cells = Vec::new();
+        for y in 0 .. self.height * times {
+            let mut row = Vec::new();
+            for x in 0 .. self.width * times {
+                row.push(self.cells[y % self.height][x % self.width].clone());
+            }
+            cells.push(row);
+        }
+
+        let width = self.width * times;
+        let height = self.height * times;
+
+        Map2d { cells, width, height }
+    }
+
     pub fn at(&self, y: i32, x: i32) -> &T {
         assert!(y >= 0);
         assert!(x >= 0);
@@ -77,6 +93,10 @@ impl<T: Clone> Map2d<T> {
 
     pub fn atp(&self, p: Point2d) -> &T {
         self.at(p.y, p.x)
+    }
+
+    pub fn put(&mut self, p: Point2d, t: T) {
+        self.cells[p.y as usize][p.x as usize] = t;
     }
 
     pub fn inbounds(&self, y: i32, x: i32) -> bool {
@@ -97,8 +117,36 @@ impl<T: Clone> Map2d<T> {
         Point2d { x: 0, y: 0 }
     }
 
+    pub fn topright(&self) -> Point2d {
+        Point2d { x: self.width as i32 - 1, y: 0 }
+    }
+
+    pub fn bottomleft(&self) -> Point2d {
+        Point2d { x: 0, y: self.height as i32 - 1 }
+    }
+
     pub fn bottomright(&self) -> Point2d {
         Point2d { x: self.width as i32 - 1, y: self.height as i32 - 1 }
+    }
+
+    pub fn centerleft(&self) -> Point2d {
+        assert!(self.height % 2 == 1);
+        Point2d { x: 0, y: (self.height as i32 - 1) / 2 }
+    }
+
+    pub fn centerright(&self) -> Point2d {
+        assert!(self.height % 2 == 1);
+        Point2d { x: self.width as i32 - 1, y: (self.height as i32 - 1) / 2 }
+    }
+
+    pub fn centertop(&self) -> Point2d {
+        assert!(self.width % 2 == 1);
+        Point2d { x: (self.width as i32 - 1) / 2, y: 0 }
+    }
+
+    pub fn centerbottom(&self) -> Point2d {
+        assert!(self.width % 2 == 1);
+        Point2d { x: (self.width as i32 - 1) / 2, y: self.height as i32 - 1 }
     }
 }
 
@@ -123,12 +171,6 @@ mod tests {
     }
 
     #[test]
-    fn test_sum() {
-        let m = Map2d::from_str(MAP, pdigit);
-        assert_eq!(m.sum(|x| *x), 48);
-    }
-
-    #[test]
     fn test_bounds() {
         let m = Map2d::from_str(MAP, pdigit);
         assert_eq!(m.inbounds(0, 0), true);
@@ -136,5 +178,17 @@ mod tests {
         assert_eq!(m.inbounds(4, 0), false);
         assert_eq!(m.inbounds(0, -1), false);
         assert_eq!(m.inbounds(0, 3), false);
+    }
+
+    #[test]
+    fn test_copied() {
+        let m = Map2d::from_str(MAP, pdigit);
+        let c = m.copied(3);
+        assert_eq!(c.width, 9);
+        assert_eq!(c.height, 12);
+        assert_eq!(*c.at(0, 0), 1);
+        assert_eq!(*c.at(0, 2), 3);
+        assert_eq!(*c.at(0, 3), 1);
+        assert_eq!(*c.at(0, 5), 3);
     }
 }
