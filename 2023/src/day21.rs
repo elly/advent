@@ -130,6 +130,7 @@ fn partb(map: &Map) -> usize {
     assert!(map.width == map.height);
 
     const STEPS: usize = 26501365;
+    // const STEPS: usize = 5000;
     let fromstart = flood(map, start(map));
     let pts = [(map.topleft(), map.bottomright()),
                (map.topright(), map.bottomleft()),
@@ -168,8 +169,16 @@ fn partb(map: &Map) -> usize {
         
         // Now we have less than one full garden of reach left, so:
         let mt = reachn(&fm, left);
-        // dbg!(mt, mul);
         t += mt * mul;
+
+        // Case that I missed originally - we stop the original iteration when
+        // we don't have enough movement to reach *every* reachable square in a
+        // garden, but we might have enough movement left to reach an adjacent
+        // garden, too. Slide over to there and account for it.
+        if left > stride {
+            let mt = reachn(&fm, left - stride);
+            t += mt * (mul + 1);
+        }
     }
 
     // Now to handle the ones that lie on the axes.
@@ -195,9 +204,8 @@ fn partb(map: &Map) -> usize {
 
         let mut left = STEPS - (b + 1);
         // XXX: this is very ugly. In the real input I have (but *not* the test
-        // input), there are a clear row/column at the center. This doesn't even
-        // appear to be correct on the real input, but I don't see why it
-        // wouldn't be.
+        // input), there are a clear row/column at the center. This works on the
+        // real input but for the test input it does not.
         let stride = map.width;
 
         while left >= fd {
@@ -215,69 +223,10 @@ fn partb(map: &Map) -> usize {
     t
 }
 
-fn copymap(map: &Map, f: usize) -> Map {
-    let mut m = map.copied(f);
-    let cy = m.height / 2;
-    let cx = m.width / 2;
-    for y in 0 .. m.height {
-        for x in 0 .. m.width {
-            let p = Point2d { x: x as i32, y: y as i32 };
-            if *m.atp(p) == Tile::Start && (y != cy || x != cx) {
-                m.put(p, Tile::Garden);
-            }
-        }
-    }
-    m
-}
-
-fn findq(map: &Map, dist: usize) -> (i64, i64, i64) {
-    let m1 = copymap(map, 1);
-    let m2 = copymap(map, 3);
-    let m3 = copymap(map, 5);
-    let m4 = copymap(map, 7);
-
-    let p1 = parta(&m1, dist) as i64;
-    let p2 = parta(&m2, dist) as i64;
-    let p3 = parta(&m3, dist) as i64;
-    let p4 = parta(&m4, dist) as i64;
-
-    let c = p1;
-    let b = (p2 - p1) / 2;
-    let a = b;
-
-    dbg!(a, b, c);
-
-    assert!(p1 == c);
-    assert!(p2 == (a * 1 * 1) + (b * 1) + c);
-    assert!(p3 == (a * 2 * 2) + (b * 2) + c);
-    assert!(p4 == (a * 3 * 3) + (b * 3) + c);
-
-    (a, b, c)
-}
-
-fn findqs(map: &Map) -> ((i64, i64, i64),
-                         (i64, i64, i64)) {
-    (findq(map, 10000), findq(map, 10001))
-}
-
-fn quadrat(eq: (i64, i64, i64), x: i64) -> i64 {
-    (eq.0 * x * x + eq.1 * x + eq.2)
-}
-
-// 621943948873468 is too low for real.in
-// 621943949873468 is too low for real.in
-// 622943948873468 is too high for real.in
+// 621944727930768 for my real input
 
 pub fn solve(input: &str) -> (String, String) {
     let map = parse(input);
-    let (eq, oq) = findqs(&map);
-    // const STEPS: i64 = 26501365;
-    // const MAPSZ: i64 = 65;
-    const STEPS: i64 = 50;
-    const MAPSZ: i64 = 5;
-
-    const REST: i64 = STEPS - MAPSZ;
-    const X: i64 = REST / (MAPSZ * 2 + 1);
 
     (parta(&map, 64).to_string(), partb(&map).to_string())
 }
