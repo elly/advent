@@ -177,6 +177,10 @@ fn edges(map: &Map, vs: &Vec<Point2d>, vi: usize, climb: bool) -> Vec<Edge> {
 // as a single u64 with one bit per node, corresponding to each node's index in
 // the vertex vector. The cost so far is passed down and only returned when we
 // actually find the end node.
+//
+// The original version of this, which operated on the map rather than an
+// abstract graph and which therefore needed to use a HashSet for the visited
+// intersections, was over 1000x slower (!). Use better data structures, kids!
 fn longdfs(g: &Graph, from: usize, to: usize, vs: u64, sofar: usize) -> usize {
     if from == to {
         return sofar;
