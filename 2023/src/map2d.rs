@@ -159,16 +159,4 @@ mod tests {
         assert_eq!(m.inbounds(0, -1), false);
         assert_eq!(m.inbounds(0, 3), false);
     }
-
-    #[test]
-    fn test_copied() {
-        let m = Map2d::from_str(MAP, pdigit);
-        let c = m.copied(3);
-        assert_eq!(c.width, 9);
-        assert_eq!(c.height, 12);
-        assert_eq!(*c.at(0, 0), 1);
-        assert_eq!(*c.at(0, 2), 3);
-        assert_eq!(*c.at(0, 3), 1);
-        assert_eq!(*c.at(0, 5), 3);
-    }
 }

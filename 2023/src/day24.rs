@@ -1,5 +1,7 @@
 // Day 24: Never Tell Me The Odds
 
+use num::abs;
+
 type Point3 = (i64, i64, i64);
 type Point3f = (f64, f64, f64);
 
@@ -86,9 +88,24 @@ fn parta(stones: &Vec<Hailstone>) -> usize {
     t / 2
 }
 
+fn partb(stones: &Vec<Hailstone>) -> usize {
+    print!("eqns : [ ");
+    for i in 0 .. 5 {
+        print!("pxr + vxr * t_{} = {} + {} * t_{}, ",
+                 i, stones[i].p.0, stones[i].v.0, i);
+        print!("pyr + vyr * t_{} = {} + {} * t_{}, ",
+                 i, stones[i].p.1, stones[i].v.1, i);
+        print!("pzr + vzr * t_{} = {} + {} * t_{}, ",
+                 i, stones[i].p.2, stones[i].v.2, i);
+    }
+    println!(" 1 = 1 ];");
+    println!("solve(eqns, [pxr, pyr, pzr, vxr, yvr, vzr]);");
+    0
+}
+
 pub fn solve(input: &str) -> (String, String) {
     let stones = parse(input);
-    (parta(&stones).to_string(), "".to_string())
+    (parta(&stones).to_string(), partb(&stones).to_string())
 }
 
 #[test]
