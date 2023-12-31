@@ -49,11 +49,7 @@ pub struct Map2d<T> {
 
 impl<T: Clone> Map2d<T> {
     pub fn from_str(input: &str, parse: fn(char) -> T) -> Map2d<T> {
-        let strs: Vec<_> = input.split('\n').collect();
-        Map2d::from_strs(&strs, parse)
-    }
-
-    pub fn from_strs(input: &[&str], parse: fn(char) -> T) -> Map2d<T> {
+        let input: Vec<_> = input.split('\n').collect();
         let mut cells = Vec::new();
         for line in input.iter().filter(|x| !x.is_empty()) {
             let mut row = Vec::new();
@@ -76,7 +72,9 @@ impl<T: Clone> Map2d<T> {
     }
 
     pub fn atp(&self, p: Point2d) -> &T {
-        self.at(p.y, p.x)
+        assert!(p.y >= 0);
+        assert!(p.x >= 0);
+        &self.cells[y as usize][x as usize]
     }
 
     pub fn inbounds(&self, y: i32, x: i32) -> bool {
