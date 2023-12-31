@@ -63,7 +63,7 @@ struct ModState {
 
 fn new_modstates(circuit: &Circuit) -> HashMap<String, ModState> {
     let mut r = HashMap::new();
-    for (k, v) in circuit.iter() {
+    for k in circuit.keys() {
         let mut last_inputs = HashMap::new();
         for (ik, iv) in circuit.iter() {
             if iv.outs.contains(k) {

@@ -41,15 +41,12 @@ fn parse(input: &str) -> Map {
 
 #[derive(Debug)]
 struct Edge {
-    from: usize,
     to: usize,
     cost: usize,
 }
 
 #[derive(Debug)]
 struct Node {
-    id: usize,
-    loc: Point2d,
     outs: Vec<Edge>,
 }
 
@@ -70,8 +67,6 @@ fn buildgraph(map: &Map, climb: bool) -> Graph {
 
     for vi in 0 .. vs.len() {
         r.push(Node {
-            id: vi,
-            loc: vs[vi],
             outs: edges(map, &vs, vi, climb),
         });
     }
@@ -163,7 +158,6 @@ fn edges(map: &Map, vs: &Vec<Point2d>, vi: usize, climb: bool) -> Vec<Edge> {
 
         if vs.contains(&p) && p != vs[vi] {
             r.push(Edge {
-                from: vi,
                 to: vs.iter().position(|&pp| pp == p).unwrap(),
                 cost: dist,
             });

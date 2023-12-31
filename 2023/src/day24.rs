@@ -1,7 +1,5 @@
 // Day 24: Never Tell Me The Odds
 
-use num::abs;
-
 type Point3 = (i64, i64, i64);
 type Point3f = (f64, f64, f64);
 
