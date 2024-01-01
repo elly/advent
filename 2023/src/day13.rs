@@ -1,4 +1,6 @@
 // Day 13: Point of Incidence
+// TODO: brief description
+// TODO: rewrite this to use Map2d
 
 #[derive(Clone, Copy, Eq, PartialEq)]
 enum Tile {

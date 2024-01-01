@@ -52,7 +52,6 @@ fn parta(lines: &[&str]) -> u32 {
 }
 
 fn partb(lines: &[&str]) -> u32 {
-    // 54506 is too high here
     lines.iter().map(|line| calibration(alldigits(line))).sum()
 }
 

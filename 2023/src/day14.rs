@@ -16,6 +16,7 @@ enum Tile {
 }
 
 #[derive(Clone, Hash, Eq, PartialEq)]
+// TODO: rewrite this to use map2d
 struct Map {
     tiles: Vec<Vec<Tile>>,
     width: usize,

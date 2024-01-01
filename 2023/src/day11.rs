@@ -10,7 +10,8 @@
 // iterating over rows/cols within the bounding box and adjusting the
 // coordinates of the galaxies "below" the iteration point as we go.
 //
-// TODO: factor out a geometry library from this and day10
+// TODO: rewrite this to use Map2d. You will need a sparse map2d implementation
+// for that.
 
 use std::collections::HashSet;
 use num::abs;

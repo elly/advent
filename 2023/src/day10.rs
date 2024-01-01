@@ -1,7 +1,8 @@
 // Day 10:
+// TODO: brief description of the problem & how it is solved
+// TODO: make this use Map2d and friends
 
-use std::collections::HashSet;
-use std::collections::VecDeque;
+use std::collections::{HashSet,VecDeque};
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 struct Point(usize, usize);

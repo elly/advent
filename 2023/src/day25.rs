@@ -4,6 +4,7 @@
 // where the edges are undirected. We want to find 3 edges we can cut to
 // partition the graph, then compute the product of the sizes of the two halves
 // of the partition.
+// TODO: explain how we did this
 
 use std::collections::{HashMap,HashSet};
 

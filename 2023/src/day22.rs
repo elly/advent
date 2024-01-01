@@ -1,4 +1,6 @@
 // Day 22: Sand Slabs
+// TODO: add a brief description of what this is & how it works
+// TODO: factor out a 3d geometry library?
 
 use std::collections::HashMap;
 

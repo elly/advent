@@ -1,4 +1,5 @@
 // Day 6:
+// TODO: brief explanation
 
 #[derive(Debug)]
 struct Race {

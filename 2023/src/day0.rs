@@ -1,4 +1,5 @@
-// day 0!
+// Day 0!
+// TODO: explain what this is
 // part a: given a string of parentheses, compute how deep the nesting goes.
 // part b: the same but more cleverly done with a fold
 

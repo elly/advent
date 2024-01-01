@@ -1,4 +1,5 @@
 // Day 7: Camel Cards
+// TODO: brief explanation
 
 use std::cmp::Ordering;
 
@@ -100,20 +101,20 @@ fn parta(hands: &Vec<Hand>) -> u64 {
     total_bid(hs)
 }
 
-fn partbify(hands: &mut Vec<Hand>) {
-    for h in hands {
+fn partbify(hands: &Vec<Hand>) -> Vec<Hand> {
+    let mut hands = hands.clone();
+    for h in &mut hands {
         for ci in 0 .. h.cards.len() {
             if h.cards[ci] == 11 {
                 h.cards[ci] = 1;
             }
         }
     }
+    hands
 }
 
 fn partb(hands: &Vec<Hand>) -> u64 {
-    let mut hs: Vec<Hand> = hands.clone();
-    partbify(&mut hs);
-    total_bid(hs)
+    total_bid(partbify(hands))
 }
 
 pub fn solve(input: &str) -> (String, String) {

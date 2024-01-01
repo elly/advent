@@ -7,6 +7,8 @@
 // Looking at the maze, it looks like the paths are quite long and do not branch
 // very often, so depth-first search might work, especially if we avoid
 // recursing when we only have one out (which will be frequently).
+//
+// TODO: explain how the solution works & why it is fast
 
 use crate::map2d::{Dir2d,Map2d,Point2d};
 use std::cmp;

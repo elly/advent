@@ -1,4 +1,6 @@
 // Day 20: Pulse Propagation
+// TODO: add a brief description of how this works
+// TODO: add a note about the messup with "steps" vs not
 
 use std::collections::{HashMap,VecDeque};
 
@@ -123,8 +125,6 @@ fn sim(circuit: &Circuit, presses: usize, target: &str) -> (usize, usize, usize)
                         q.push_back((dst, &o, p));
                     }
                 }
-            } else {
-//              dbg!((src, dst, pulse));
             }
         }
     }
@@ -147,3 +147,5 @@ pub fn solve(input: &str) -> (String, String) {
     let (h, l, _) = sim(&circuit, 1000, "");
     ((h * l).to_string(), partb(&circuit).to_string())
 }
+
+// TODO: unit tests

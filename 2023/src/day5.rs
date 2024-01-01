@@ -1,4 +1,5 @@
 // Day 5: If You Give A Seed A Fertilizer
+// TODO: brief explanation
 
 #[derive(Debug)]
 struct Mapping {
@@ -55,6 +56,7 @@ fn parta(input: &Input) -> u64 {
 // This is really really slow - it takes a few minutes to run on my solution.
 // There's probably a more clever way to do this. #450 on global LB though so
 // who can say whether it is good or bad
+// TODO: this is very slow and naive, do it a different way
 fn partb(input: &Input) -> u64 {
     let mut lowest: u64 = 9999999999;
     for r in input.seeds.chunks(2) {

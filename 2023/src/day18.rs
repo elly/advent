@@ -7,6 +7,9 @@
 // way to tell which edge is the outside one, so we try walking both edges and
 // look for the longest perimeter.
 use crate::map2d::{Dir2d,Point2d};
+
+// TODO: drop the dep on geo by implementing Shoelace myself. It doesn't look
+// thaaat hard.
 use geo::Area;
 use geo::geometry::{Coord,LineString,Polygon};
 

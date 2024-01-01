@@ -1,4 +1,7 @@
 // Day 24: Never Tell Me The Odds
+// TODO: brief problem description
+// TODO: factor out 3d geometry library
+// TODO: explain what happened with 24b and wolframalpha
 
 type Point3 = (i64, i64, i64);
 type Point3f = (f64, f64, f64);

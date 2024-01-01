@@ -1,4 +1,6 @@
 // Day 8:
+// TODO: brief explanation
+// TODO: rewrite not to use num::lcm
 
 use std::collections::HashMap;
 
