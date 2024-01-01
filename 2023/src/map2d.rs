@@ -48,6 +48,19 @@ pub struct Map2d<T> {
 }
 
 impl<T: Clone> Map2d<T> {
+    pub fn from_size(width: usize, height: usize,
+                     factory: impl Fn(Point2d) -> T) -> Map2d<T> {
+        let mut cells = Vec::new();
+        for y in 0..height {
+            let mut row = Vec::new();
+            for x in 0..width {
+                row.push(factory(Point2d { x: x as i32, y: y as i32 }));
+            }
+            cells.push(row);
+        }
+        Map2d { cells, width, height }
+    }
+
     pub fn from_str(input: &str, parse: fn(char) -> T) -> Map2d<T> {
         let input: Vec<_> = input.split('\n').collect();
         let mut cells = Vec::new();
@@ -65,16 +78,26 @@ impl<T: Clone> Map2d<T> {
         Map2d { cells, width, height }
     }
 
-    pub fn at(&self, y: i32, x: i32) -> &T {
-        assert!(y >= 0);
-        assert!(x >= 0);
-        &self.cells[y as usize][x as usize]
-    }
-
     pub fn atp(&self, p: Point2d) -> &T {
         assert!(p.y >= 0);
         assert!(p.x >= 0);
-        &self.cells[y as usize][x as usize]
+        &self.cells[p.y as usize][p.x as usize]
+    }
+
+    pub fn update(&mut self, p: Point2d, f: impl Fn(&T) -> T) {
+        let ux = p.x as usize;
+        let uy = p.y as usize;
+        self.cells[uy][ux] = f(&self.cells[uy][ux]);
+    }
+
+    pub fn sum(&self, f: impl Fn(&T) -> usize) -> usize {
+        let mut t = 0;
+        for y in 0..self.height {
+            for x in 0..self.width {
+                t += f(&self.cells[y][x]);
+            }
+        }
+        t
     }
 
     pub fn inbounds(&self, y: i32, x: i32) -> bool {
@@ -130,7 +153,7 @@ impl<T: Clone> Map2d<T> {
 
 #[cfg(test)]
 mod tests {
-    use crate::map2d::Map2d;
+    use crate::map2d::{Map2d,Point2d};
     fn pdigit(c: char) -> usize {
         c.to_digit(10).unwrap() as usize
     }
@@ -142,10 +165,10 @@ mod tests {
         let m = Map2d::from_str(MAP, pdigit);
         assert_eq!(m.width, 3);
         assert_eq!(m.height, 4);
-        assert_eq!(*m.at(0, 0), 1);
-        assert_eq!(*m.at(0, 2), 3);
-        assert_eq!(*m.at(3, 0), 0);
-        assert_eq!(*m.at(3, 2), 2);
+        assert_eq!(*m.atp(Point2d { x: 0, y: 0 }), 1);
+        assert_eq!(*m.atp(Point2d { x: 2, y: 0 }), 3);
+        assert_eq!(*m.atp(Point2d { x: 0, y: 3 }), 0);
+        assert_eq!(*m.atp(Point2d { x: 2, y: 3 }), 2);
     }
 
     #[test]

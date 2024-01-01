@@ -11,7 +11,7 @@
 
 use std::collections::VecDeque;
 
-use crate::map2d;
+use crate::map2d::{Dir2d,Map2d,Point2d};
 
 #[derive(Clone, Copy, Eq, PartialEq)]
 enum Tile {
@@ -22,61 +22,40 @@ enum Tile {
     SplitEW,
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-enum Dir {
-    North = 0,
-    South = 1,
-    West  = 2,
-    East  = 3,
-}
-
 impl Tile {
-    fn step(&self, dir: &Dir) -> (Dir, Option<Dir>) {
+    fn step(&self, dir: &Dir2d) -> (Dir2d, Option<Dir2d>) {
         match (*self, *dir) {
             (Tile::Space, d)            => (d,          None),
 
             // \
-            (Tile::MirWE, Dir::North)   => (Dir::West,  None),
-            (Tile::MirWE, Dir::South)   => (Dir::East,  None),
-            (Tile::MirWE, Dir::East)    => (Dir::South, None),
-            (Tile::MirWE, Dir::West)    => (Dir::North, None),
+            (Tile::MirWE, Dir2d::North)   => (Dir2d::West,  None),
+            (Tile::MirWE, Dir2d::South)   => (Dir2d::East,  None),
+            (Tile::MirWE, Dir2d::East)    => (Dir2d::South, None),
+            (Tile::MirWE, Dir2d::West)    => (Dir2d::North, None),
 
             // /
-            (Tile::MirEW, Dir::North)   => (Dir::East,  None),
-            (Tile::MirEW, Dir::South)   => (Dir::West,  None),
-            (Tile::MirEW, Dir::East)    => (Dir::North, None),
-            (Tile::MirEW, Dir::West)    => (Dir::South, None),
+            (Tile::MirEW, Dir2d::North)   => (Dir2d::East,  None),
+            (Tile::MirEW, Dir2d::South)   => (Dir2d::West,  None),
+            (Tile::MirEW, Dir2d::East)    => (Dir2d::North, None),
+            (Tile::MirEW, Dir2d::West)    => (Dir2d::South, None),
 
-            (Tile::SplitNS, Dir::West)  => (Dir::North, Some(Dir::South)),
-            (Tile::SplitNS, Dir::East)  => (Dir::North, Some(Dir::South)),
+            (Tile::SplitNS, Dir2d::West)  => (Dir2d::North, Some(Dir2d::South)),
+            (Tile::SplitNS, Dir2d::East)  => (Dir2d::North, Some(Dir2d::South)),
             (Tile::SplitNS, d)          => (d,          None),
 
-            (Tile::SplitEW, Dir::North) => (Dir::West, Some(Dir::East)),
-            (Tile::SplitEW, Dir::South) => (Dir::West, Some(Dir::East)),
+            (Tile::SplitEW, Dir2d::North) => (Dir2d::West, Some(Dir2d::East)),
+            (Tile::SplitEW, Dir2d::South) => (Dir2d::West, Some(Dir2d::East)),
             (Tile::SplitEW, d)          => (d,         None),
         }
     }
 }
 
-type Map = map2d::Map2d<Tile>;
+type Map = Map2d<Tile>;
 
-struct Point(i32, i32);
-
-impl Point {
-    fn moveby(&self, dir: &Dir) -> Point {
-        match *dir {
-            Dir::North => Point(self.0, self.1 - 1),
-            Dir::South => Point(self.0, self.1 + 1),
-            Dir::West  => Point(self.0 - 1, self.1),
-            Dir::East  => Point(self.0 + 1, self.1),
-        }
-    }
-}
-
-struct Beam(Point, Dir);
+struct Beam(Point2d, Dir2d);
 
 fn parse(input: &str) -> Map {
-    map2d::Map2d::from_str(input,
+    Map2d::from_str(input,
         |cell| match cell {
             '.'  => Tile::Space,
             '\\' => Tile::MirWE,
@@ -90,67 +69,53 @@ fn parse(input: &str) -> Map {
 
 fn zap(map: &Map, start: Beam) -> usize {
     // TODO: use Map2d for zm and vm
-    let mut zm = Vec::new();
-    let mut vm = Vec::new();
-    for _ in 0 .. map.height {
-        let mut z = Vec::new();
-        let mut v = Vec::new();
-        for _ in 0 .. map.width {
-            z.push(0);
-            let mut tm = Vec::new();
-            for _ in 0 .. 4 {
-                tm.push(false);
-            }
-            v.push(tm);
-        }
-        zm.push(z);
-        vm.push(v);
-    }
+    let mut zm: Map2d<usize> = Map2d::from_size(map.width, map.height, |_| 0);
+    let mut vm: Map2d<[bool; 4]> = Map2d::from_size(map.width, map.height,
+        |_| [false, false, false, false]);
 
     let mut zq = VecDeque::new(); 
     zq.push_back(start);
 
     while !zq.is_empty() {
         let Beam(p, d) = zq.pop_front().unwrap();
-        if !map.inbounds(p.1, p.0) {
+        if !map.inboundsp(p) {
             continue;
         }
-        if vm[p.1 as usize][p.0 as usize][d as usize] {
+        if vm.atp(p)[d as usize] {
             continue;
         }
-        zm[p.1 as usize][p.0 as usize] += 1;
-        vm[p.1 as usize][p.0 as usize][d as usize] = true;
-        let (a, b) = map.at(p.1, p.0).step(&d);
-        zq.push_back(Beam(p.moveby(&a), a));
+        zm.update(p, |v| *v + 1);
+        vm.update(p, |v| {
+            let mut a = v.clone();
+            a[d as usize] = true;
+            a
+        });
+        let (a, b) = map.atp(p).step(&d);
+        zq.push_back(Beam(p.moveby(a), a));
         if let Some(b) = b {
-            zq.push_back(Beam(p.moveby(&b), b));
+            zq.push_back(Beam(p.moveby(b), b));
         }
     }
 
-    let mut t = 0;
-    for y in 0 .. zm.len() {
-        for x in 0 .. zm[y].len() {
-            t += if zm[y][x] > 0 { 1 } else { 0 }
-        }
-    }
-    t
+    zm.sum(|v| if *v > 0 { 1 } else { 0 })
 }
 
 fn parta(map: &Map) -> usize {
-    zap(&map, Beam(Point(0, 0), Dir::East))
+    zap(&map, Beam(Point2d { x: 0, y: 0 }, Dir2d::East))
 }
 
 fn partb(map: &Map) -> usize {
     let mut best = 0;
     for y in 0 .. map.height {
+        let x = 0 as i32;
         let y = y as i32;
-        let v = zap(&map, Beam(Point(0, y), Dir::East));
+        let v = zap(&map, Beam(Point2d { x, y }, Dir2d::East));
         if v > best {
             best = v;
         }
 
         let x = (map.width - 1) as i32;
-        let v = zap(&map, Beam(Point(x, y), Dir::West));
+        let v = zap(&map, Beam(Point2d { x, y }, Dir2d::West));
         if v > best {
             best = v;
         }
@@ -158,13 +123,14 @@ fn partb(map: &Map) -> usize {
 
     for x in 0 .. map.width {
         let x = x as i32;
-        let v = zap(&map, Beam(Point(x, 0), Dir::South));
+        let y = 0 as i32;
+        let v = zap(&map, Beam(Point2d { x, y }, Dir2d::South));
         if v > best {
             best = v;
         }
 
         let y = (map.height - 1) as i32;
-        let v = zap(&map, Beam(Point(x, y), Dir::North));
+        let v = zap(&map, Beam(Point2d { x, y }, Dir2d::North));
         if v > best {
             best = v;
         }
